@@ -1,31 +1,32 @@
 # Formalni jezici — Skripta
 
-Ovo je skripta za kolegij "Formalni jezici". Sadrži poglavlja u zasebnim .tex datotekama (1.tex — 8.tex) i glavni sastavljač main.tex.
+Ova skripta prati kolegij *Formalni jezici* i vodi čitatelja kroz osnovne koncepte, metode i tehnike potrebne za razumijevanje teorije računarstva i jezika.
 
-## Sadržaj
-- Teorija i primjeri za formalne jezike
-- Struktura: datoteke 1.tex do 8.tex uključene u main.tex
+Što ćete naučiti
+- Osnovne definicije i notaciju za jezike i automatske strojeve.
+- Regularni jezici i regularni izrazi; konstrukcija i dokazi svojstava.
+- Kontekstno-slobodni jezici i sintaksa (gramatike, parsiranje).
+- Modeli izračunljivosti: potpunost determinističkih i nedeterminističkih strojeva.
+- Turingovi strojevi, odlučivost i nerazlučivost problema.
+- Osnove složenosti izračunavanja i usporedba problema po težini.
 
-## Zahtjevi
-- TeX distribucija (TeX Live, MiKTeX ili slična)
-- Preporučeno: `latexmk` za automatsku kompilaciju
+Pokrivena poglavlja
+- Poglavlje 1: Uvod i osnovne definicije
+- Poglavlje 2: Regularni jezici i automati
+- Poglavlje 3: Regularni izrazi i svojstva jezika
+- Poglavlje 4: Kontekstno-slobodne gramatike i parsiranje
+- Poglavlje 5: Kontekstno-slobodni jezici — svojstva i primjene
+- Poglavlje 6: Turingovi strojevi i odlučivost
+- Poglavlje 7: Nerazlučivost i reducibilnosti
+- Poglavlje 8: Osnove složenosti i pregled naprednijih tema
 
-## Kako izgraditi PDF
-U direktoriju projekta pokrenite jedan od sljedećih naredbi:
+Za koga je skripta
+- Studenti koji pohađaju kolegij ili žele sustavno naučiti teoriju jezika.
+- Svatko tko treba sažet, ali sustavan pregled ključnih pojmova teorije računarstva.
 
-```bash
-pdflatex main.tex
-# ili, za automatsku višestruku kompilaciju i čišćenje:
-latexmk -pdf main.tex
-```
-
-Nakon uspješne kompilacije dobit ćete `main.pdf` spreman za pregled.
-
-## Doprinos
-PR-ovi su dobrodošli. Ako želite napraviti promjene u skripti, prvo otvorite issue ili pošaljite pull request.
-
-## Licenca
-Licenca nije specificirana. Ako želite, dodajte LICENSE datoteku u repozitorij.
+Doprinos i licenca
+- PR-ovi i ispravci su dobrodošli — otvorite issue ili pošaljite pull request.
+- Licenca: Opened
 
 ---
 Autor: petarally
