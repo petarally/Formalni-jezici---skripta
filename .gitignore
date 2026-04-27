@@ -3,3 +3,5 @@
 .claude
 *.log
 *.out
+*.bbl
+*.blg
