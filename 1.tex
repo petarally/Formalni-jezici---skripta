@@ -1,0 +1,363 @@
+% Chapter 1 — includable by main.tex
+% Title converted to a chapter heading
+\chapter{Jezici i osnovne operacije}
+\label{chap:1}
+
+\begin{quote}
+\itshape
+Sve što ćemo raditi u ovom kolegiju vrti se oko jednog jednostavnog pitanja:
+pripada li neka riječ nekom jeziku? Ovo poglavlje postavlja temelje ---
+definira što su uopće ,,riječi'' i ,,jezici'', i uvodi osnovne operacije s
+kojima ćemo ih graditi i kombinirati.
+\end{quote}
+
+
+% ================================================================
+\section{Tri pogleda na isti objekt}
+% ================================================================
+
+Zamislite funkciju $f : \mathbb{R} \to \mathbb{R}$. Možemo je opisati na
+barem tri načina: kao skup uređenih parova $\{(x, f(x)) \mid x \in \mathbb{R}\}$,
+kao formulu poput $f(x) = x^2 + 1$, ili kao program koji za svaki ulaz $x$
+vraća odgovarajući izlaz. Sva tri opisa govore o istoj stvari, ali svaki naglašava
+nešto drugačije i koristan je u različitim situacijama.
+
+Formalni jezici bave se istim trikom, ali za jezike umjesto funkcija.
+\textbf{Jezik} je skup --- statični popis riječi koje mu pripadaju.
+\textbf{Gramatika} je dinamično pravilo koje taj skup \emph{generira},
+kreće od početnog simbola i primjenjuje pravila prepisivanja.
+\textbf{Automat} je idealizirani stroj koji \emph{prepoznaje} jezik čitajući
+ulaznu riječ znak po znak i na kraju odlučuje: ,,da'' ili ,,ne''.
+
+Ono što čini ovaj predmet zanimljivim jest to da između ova tri pogleda
+postoje duboke i neočite veze. Na primjer, nije odmah jasno zašto bi za svaku
+gramatiku određenog tipa \emph{nužno} postojao automat koji prepoznaje isti
+jezik --- ali to je upravo ono što ćemo dokazivati.
+
+Sve klase koje ćemo proučavati organizirane su u \textbf{Chomskyjevu hijerarhiju},
+kojoj se vraćamo na kraju poglavlja.
+
+% ================================================================
+\section{Abecede i riječi}
+% ================================================================
+
+Prije nego što možemo govoriti o jezicima, moramo dogovoriti s kojim simbolima
+radimo.
+
+\begin{definicija}[Abeceda]
+\textbf{Abeceda} je konačni, neprazni skup $\Sig$. Elemente abecede zovemo
+\textbf{znakovima} i često označavamo malim grčkim slovima: $\alpha, \beta,
+\gamma, \ldots$
+\end{definicija}
+
+Ništa posebno --- abeceda je samo dogovor o tome koji su nam simboli na
+raspolaganju. Ograničenje da mora biti \emph{konačna} je ključno: svi naši
+strojevi i gramatike imat će konačni opis, pa moramo krenuti od konačne
+abecede.
+
+\begin{primjer}[Nekoliko uobičajenih abeceda]
+U praksi ćemo najčešće raditi s:
+\begin{itemize}
+  \item $\Sig = \{0, 1\}$ --- binarna abeceda, dovoljna za kodiranje čega god želimo
+  \item $\Sig = \{a, b\}$ ili $\Sig = \{a, b, c\}$ --- mali primjeri za ilustracije
+  \item $\Sig = \{0, 1, \ldots, 9\}$ --- decimalne znamenke
+\end{itemize}
+Abeceda ne mora biti skup slova ili znamenki --- može biti skup tokena, boja,
+instrukcija ili bilo čega drugog. Bitno je samo da je konačna.
+\end{primjer}
+
+\begin{definicija}[Riječ i njezina duljina]
+\textbf{Riječ} nad abecedom $\Sig$ je konačni niz znakova iz $\Sig$:
+\[
+  w = \alpha_1 \alpha_2 \cdots \alpha_n, \qquad \alpha_i \in \Sig.
+\]
+\textbf{Duljina} riječi $w$, pisana $|w|$, jest broj znakova u njoj.
+Pišemo također $|w|_\alpha$ za broj pojavljivanja znaka $\alpha$ u $w$.
+\end{definicija}
+
+Posebno mjesto zauzima \textbf{prazna riječ} $\eps$ --- jedina riječ duljine 0.
+To nije znak, nego prazan niz znakova, i vrijedi $|\eps| = 0$.
+
+\begin{napomena}
+Prazna riječ $\eps$ i prazan \emph{jezik} $\emptyset$ nisu isto.
+Prazna riječ \emph{postoji} kao objekt, samo ne sadrži nijedan znak.
+Prazan jezik je skup koji ne sadrži nijednu riječ --- pa onda ni $\eps$.
+Ovu razliku je lako zamijeniti na ispitu, pazite.
+\end{napomena}
+
+Uobičajeno je poistovjećivati znak $\alpha \in \Sig$ s jednakovrijednom
+jednoznakovnom riječi. Dakle, $a$ kao znak i $a$ kao jednoelementna
+,,rečenica'' su isti objekt --- samo gledamo iz drugog kuta.
+
+% ================================================================
+\section{Konkatenacija}
+% ================================================================
+
+Osnovna operacija kojom iz kratkih riječi gradimo dulje jest
+\textbf{konkatenacija} --- spajanje dvije riječi jedne za drugom.
+
+\begin{definicija}[Konkatenacija]
+Za riječi $u = \alpha_1 \cdots \alpha_n$ i $v = \beta_1 \cdots \beta_m$
+definiramo
+\[
+  uv \;:=\; \alpha_1 \cdots \alpha_n \, \beta_1 \cdots \beta_m.
+\]
+Vrijedi $|uv| = |u| + |v|$ --- duljine se zbrajaju.
+\end{definicija}
+
+Konkatenacija je asocijativna: $(uv)w = u(vw)$, pa zagrade su suvišne
+i pišemo jednostavno $uvw$. Prazna riječ $\eps$ je neutralni element:
+$\eps w = w \eps = w$ --- dodavanje ničega ništa ne mijenja.
+
+Budući da konkatenacija ,,izgleda kao množenje'', koristimo uobičajenu
+multiplikativnu notaciju za potencije:
+\[
+  u^0 := \eps, \qquad u^1 := u, \qquad u^2 := uu, \qquad u^3 := uuu, \quad\ldots
+\]
+
+\begin{primjer}
+Neka je $u = ab$ i $v = ba$. Tada $uv = abba$, $vu = baab$, $u^3 = ababab$.
+Konkatenacija nije komutativna --- $uv \neq vu$ u općem slučaju.
+\end{primjer}
+
+% ================================================================
+\section{Jezici}
+% ================================================================
+
+Sad kad znamo što su riječi, možemo definirati jezik.
+
+\begin{definicija}[$\Sig^*$ i jezik]
+Skup \emph{svih} mogućih riječi nad abecedom $\Sig$ (uključujući $\eps$)
+označavamo s $\Sig^*$:
+\[
+  \Sig^* \;:=\; \{\eps\} \cup \Sig \cup \Sig^2 \cup \Sig^3 \cup \cdots
+\]
+\textbf{Jezik} nad $\Sig$ je bilo koji podskup $L \subseteq \Sig^*$.
+\end{definicija}
+
+Definicija je namjerno vrlo široka --- jezik je doslovno \emph{bilo koji}
+skup riječi, konačni ili beskonačni. Jedino ograničenje je da su sve riječi
+nad istom abecedom. Nema uvjeta da jezik mora imati neku posebnu strukturu;
+to tek postaje zanimljivo kad počnemo klasificirati jezike po tome
+\emph{kakvu} strukturu imaju.
+
+\begin{primjer}
+Nad $\Sig = \{a, b\}$, evo nekoliko jezika raznih vrsta:
+\begin{itemize}
+  \item $L_1 = \{a, ab, aba\}$ --- konačni jezik s tri elementa
+  \item $L_2 = \{w \in \Sig^* \mid |w|_a = |w|_b\}$ --- sve riječi s jednakim
+        brojem $a$-ova i $b$-ova; beskonačni
+  \item $L_3 = \{a^n b^n \mid n \geq 1\} = \{ab, aabb, aaabbb, \ldots\}$ ---
+        klasični primjer koji ćemo često susretati
+  \item $\emptyset$ --- prazan jezik; nema nijedne riječi
+  \item $\{\eps\}$ --- jezik s jednom riječi, praznom
+  \item $\Sig^*$ --- svi mogući nizovi znakova, bez ikakva ograničenja
+\end{itemize}
+\end{primjer}
+
+Jezike možemo kombinirati skupovnim operacijama ($\cup$, $\cap$,
+$\setminus$, komplement spram $\Sig^*$), ali i operacijom konkatenacije,
+proširenom s riječi na skupove:
+
+\begin{definicija}[Konkatenacija jezika]
+Za jezike $L, M \subseteq \Sig^*$ definiramo
+\[
+  LM \;:=\; \{uv \mid u \in L,\; v \in M\}.
+\]
+Dakle, $LM$ se dobiva lijepljenjem svake riječi iz $L$ sa svakom riječi iz $M$.
+\end{definicija}
+
+\begin{primjer}
+Neka je $L = \{a, ab\}$ i $M = \{b, c\}$. Sve kombinacije su:
+\[
+  LM = \{a \cdot b,\; a \cdot c,\; ab \cdot b,\; ab \cdot c\}
+     = \{ab,\; ac,\; abb,\; abc\}.
+\]
+A što je $L^2 = LL$? Svaka riječ iz $L$ zalijepljena sa svakom:
+\[
+  L^2 = \{aa,\; aab,\; aba,\; abab\}.
+\]
+Primijetite da $L^2$ ima točno $|L|^2 = 4$ elementa --- u ovom slučaju
+nema ,,sudara'' (različitih kombinacija koje daju istu riječ). Nije
+uvijek tako.
+\end{primjer}
+
+% ================================================================
+\section{Kleeneve operacije}
+% ================================================================
+
+Najvažnija operacija u cijelom kolegiju je Kleeneva zvijezda.
+Susresti ćete je svugdje --- u regularnim izrazima, gramatikama, posvuda.
+
+\begin{definicija}[Kleenejev plus i zvijezda]
+Za jezik $L \subseteq \Sig^*$ definiramo:
+\begin{align*}
+  L^+ &\;:=\; \bigcup_{k \geq 1} L^k
+        \;=\; L \cup L^2 \cup L^3 \cup \cdots \\[6pt]
+  L^* &\;:=\; \bigcup_{k \geq 0} L^k
+        \;=\; \{\eps\} \cup L \cup L^2 \cup L^3 \cup \cdots
+\end{align*}
+Razlika je samo u tome što $L^*$ uključuje $L^0 = \{\eps\}$, a $L^+$ ne.
+Vrijedi $L^* = \{\eps\} \cup L^+$, tj.\ zvijezda je plus uz dodatak
+prazne riječi.
+\end{definicija}
+
+Kako čitati ove definicije? $L^*$ je skup svih \emph{nizanja} nula ili više
+riječi iz $L$ jedne za drugom. Kad kažemo da neka riječ $w$ pripada $L^*$,
+mislimo da se $w$ može ,,izrezati'' na komadiće pri čemu svaki komadić
+pripada $L$.
+
+\begin{kljucno}
+$w \in L^*$ \textbf{ako i samo ako} postoji rastav
+$w = w_1 w_2 \cdots w_k$ (za neko $k \geq 0$) takav da $w_i \in L$
+za svaki $i$. Slučaj $k = 0$ daje $w = \eps$ --- uvijek prihvatljivo.
+\end{kljucno}
+
+\begin{primjer}
+Uzmimo $L = \{0, 11\}$ nad $\Sig = \{0, 1\}$. Tada:
+\[
+  L^* = \{\eps,\; 0,\; 11,\; 00,\; 011,\; 110,\; 1111,\; 000,\; \ldots\}
+\]
+Je li $110011 \in L^*$? Da --- rastav je
+$\underbrace{11}_{}\,\underbrace{0}_{}\,\underbrace{0}_{}\,\underbrace{11}_{}$,
+svaki komadić je u $L$.
+
+Je li $1 \in L^*$? Ne. Jedina jedinka u $L$ je $0$; jedini dvoznakac je $11$;
+nema načina sastaviti samu $1$ od komadića iz $\{0, 11\}$.
+\end{primjer}
+
+\begin{primjer}
+Posebno važan slučaj: ako je $\Sig$ abeceda (shvaćena kao jezik
+jednoznakovnih riječi), tada je $\Sig^*$ upravo \emph{skup svih mogućih
+riječi} nad $\Sig$ --- što je i definicija iz prethodnog odjeljka.
+Zvijezda u oznaci $\Sig^*$ nije slučajnost.
+\end{primjer}
+
+Postoji korisna analogija s aritmetikom. Konkatenacija je množenje, prazna
+riječ $\eps$ je jedinica, a Kleeneva zvijezda nalikuje na ,,beskonačnu
+geometrijsku sumu'' $1 + L + L^2 + \cdots$, samo u algebri jezika.
+Ta analogija nije samo poetska --- na njoj se temelji teorija regularnih
+izraza koju ćemo graditi u sljedećem poglavlju.
+
+\begin{zadatak}
+\begin{enumerate}[label=(\alph*), itemsep=4pt]
+  \item Izrazite $L^*$ pomoću $L^+$ i obrnuto. Koji uvjet mora biti ispunjen
+        da vrijedi $L^+ = L^* \setminus \{\eps\}$?
+  \item Dokažite ili opovrgnite: $(L \cup M)^* = (L^* M^*)^*$.
+  \item Pokažite da je $\emptyset^* = \{\eps\}$.
+        Intuitivno, zašto to ima smisla?
+  \item Za $L = \{a\}$, opišite $L^*$ riječima. Koji je to dobro poznati skup?
+\end{enumerate}
+\end{zadatak}
+
+% ================================================================
+\section{Pozitivni jezici}
+% ================================================================
+
+Jedno naizgled sitno, ali tehnički korisno svojstvo jest pozitivnost.
+
+\begin{definicija}[Pozitivan jezik]
+Kažemo da je jezik $L$ \textbf{pozitivan} ako $\eps \notin L$.
+\end{definicija}
+
+Zašto nam je to uopće važno? U dokazima koji idu indukcijom po duljini
+riječi, pozitivnost osigurava da konkatenacijom ne možemo ostati na istoj
+duljini. Precizno: ako je $L$ pozitivan i $w \in LM$, dio koji pripada $M$
+strogo je kraći od $w$ --- pa indukcija ,,napreduje''.
+
+Vrijedi nekoliko jednostavnih pravila:
+\begin{itemize}[itemsep=3pt]
+  \item $\emptyset$ je pozitivan (trivijalno --- nema elemenata, pa ni $\eps$).
+  \item Svaki jednoznakovni jezik $\{\alpha\}$ je pozitivan.
+  \item $L^*$ \emph{nikad nije} pozitivan --- uvijek vrijedi $\eps \in L^*$.
+  \item $LM$ je pozitivan ako i samo ako je barem jedan od $L$, $M$ pozitivan.
+  \item $L \cup M$ je pozitivan ako i samo ako su \emph{oba} $L$ i $M$ pozitivna.
+\end{itemize}
+
+Zadnja dva pravila su dobar test razumijevanja --- probajte ih dokazati sami
+iz definicija.
+
+% ================================================================
+\section{Chomskyjeva hijerarhija}
+% ================================================================
+
+Na kraju poglavlja smjestimo sve u širi okvir. Chomskyjeva hijerarhija
+klasifikacija je jezika u klase prema tome koliko su ,,teški za prepoznati''.
+
+Neformalna ideja: što je jezik strukturiraniji i zahtjevniji, to je moćniji
+stroj (ili gramatika) potreban za njegovo opisivanje. Najjednostavniji jezici
+--- \textbf{regularni} --- mogu se prepoznati \emph{bez ikakva pamćenja} osim
+trenutnog stanja. Za malo zahtjevnije --- \textbf{bezkontekstne} --- treba nam
+stog (neograničena memorija, ali pristup samo s vrha). Zatim dolaze
+\textbf{kontekstni} jezici koji trebaju traku jednake duljine kao ulaz.
+Na samom vrhu su \textbf{rekurzivno prebrojivi} jezici, za koje treba
+puni Turingov stroj.
+
+Svakoj klasi odgovara vrsta gramatike i vrsta automata:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{llll}
+\hline
+\textbf{Klasa} & \textbf{Oznaka} & \textbf{Gramatika} & \textbf{Automat} \\
+\hline
+Regularni        & Reg & desno/lijevolinearna & konačni (KA, NKA) \\
+Bezkontekstni    & BK  & bezkontekstna (BKG)  & potisni (PA) \\
+Kontekstni       & Kon & kontekstna (KG)      & ograničeni (OA) \\
+Rekurzivni       & Rek & ---                  & Turingov odlučitelj \\
+Rek.\ prebrojivi & RE  & opća (OG)            & Turingov prepoznavač \\
+\hline
+\end{tabular}
+\end{center}
+
+Među klasama vrijede \emph{prave inkluzije} --- svaka klasa je pravi
+podskup sljedeće:
+\[
+  \mathrm{Reg} \;\subsetneq\; \mathrm{BK} \;\subsetneq\; \mathrm{Kon}
+  \;\subsetneq\; \mathrm{Rek} \;\subsetneq\; \mathrm{RE}.
+\]
+,,Prava'' inkluzija znači da za svaki par susjednih klasa postoji jezik koji
+pripada gornjoj, ali ne i donjoj. Klasični primjeri koji ,,razdvajaju''
+klase su:
+\begin{align*}
+  L_{=}      &= \{a^n b^n \mid n \geq 1\} \;\in\; \mathrm{BK} \setminus \mathrm{Reg}, \\
+  L_{\equiv} &= \{a^n b^n c^n \mid n \geq 1\} \;\in\; \mathrm{Kon} \setminus \mathrm{BK}.
+\end{align*}
+
+Zašto, primjerice, $L_=$ nije regularan? Intuitivno: kad konačni automat
+čita $a^n b^n$, u trenutku kad dođe do prvih $b$-ova mora nekako ,,znati''
+koliko je $a$-ova pročitao --- a ima samo konačno mnogo stanja, pa ne može
+pamtiti proizvoljan broj. Formalni dokaz dat ćemo u poglavlju o lemi o
+pumpanju.
+
+\begin{kljucno}[Što nas čeka]
+Kolegij prolazi kroz hijerarhiju odozdo prema gore: regularni jezici
+(poglavlja 2--4), bezkontekstni (poglavlje 5), kontekstni (poglavlje 7),
+i na kraju Turingovi strojevi i odlučivost (poglavlje 8).
+Svaki put kad pređemo u višu klasu, pronaći ćemo jezik koji ne stane
+u onu ispod --- i naučiti \emph{zašto}.
+\end{kljucno}
+
+% ================================================================
+\section*{Sažetak}
+% ================================================================
+
+Ovim smo postavili temelje. U jednoj rečenici: jezik je skup riječi nad
+nekom abecedom, a ovo poglavlje definira kako se s takvim skupovima radi.
+
+\medskip
+\noindent
+\begin{tabular}{ll}
+  $\Sig$ & abeceda --- konačni, neprazni skup znakova \\
+  $w, \eps$ & riječ, prazna riječ \\
+  $|w|$ & duljina riječi \\
+  $\Sig^*$ & skup svih riječi nad $\Sig$ \\
+  $L \subseteq \Sig^*$ & jezik \\
+  $LM$ & konkatenacija jezika \\
+  $L^*$, $L^+$ & Kleeneva zvijezda i plus \\
+\end{tabular}
+
+\medskip
+\noindent U sljedećem poglavlju uvodimo \textbf{regularne izraze} ---
+kompaktan formalizam za opisivanje regularnih jezika koji koristi upravo
+operacije $\cup$, konkatenaciju i ${}^*$ koje smo ovdje upoznali.

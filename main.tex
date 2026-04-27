@@ -1,0 +1,291 @@
+% Main file for the skripta — includes chapters 1..8
+\documentclass[12pt,a4paper]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[croatian]{babel}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\usepackage{parskip}
+\usepackage{ifthen}
+\tcbuselibrary{theorems, skins, breakable}
+
+\geometry{margin=2.8cm, top=3cm, bottom=3cm}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!60!black,
+  urlcolor=blue!60!black
+}
+
+% -------------------------------------------------------
+%  Boje, okruzenja i makroi (iste kao u poglavljima)
+% -------------------------------------------------------
+\definecolor{defbg}{RGB}{235, 244, 255}
+\definecolor{defborder}{RGB}{100, 160, 220}
+\definecolor{exbg}{RGB}{240, 252, 240}
+\definecolor{exborder}{RGB}{100, 180, 100}
+\definecolor{keybg}{RGB}{255, 248, 225}
+\definecolor{keyborder}{RGB}{210, 170, 50}
+\definecolor{taskbg}{RGB}{250, 240, 255}
+\definecolor{taskborder}{RGB}{160, 100, 200}
+
+\newtcolorbox[auto counter, number within=section]{definicija}[1][]{
+  colback=defbg, colframe=defborder,
+  fonttitle=\bfseries\sffamily,
+  title={Definicija~\thetcbcounter \ifthenelse{\equal{#1}{}}{}{~---~#1}},
+  breakable, enhanced, left=6pt, right=6pt, top=4pt, bottom=4pt,
+  arc=4pt
+}
+
+\newtcolorbox[auto counter, number within=section]{primjer}[1][]{
+  colback=exbg, colframe=exborder,
+  fonttitle=\bfseries\sffamily,
+  title={Primjer~\thetcbcounter \ifthenelse{\equal{#1}{}}{}{~---~#1}},
+  breakable, enhanced, left=6pt, right=6pt, top=4pt, bottom=4pt,
+  arc=4pt
+}
+
+\newtcolorbox{kljucno}[1][Ključna ideja]{
+  colback=keybg, colframe=keyborder,
+  fonttitle=\bfseries\sffamily, title=#1,
+  breakable, enhanced, left=6pt, right=6pt, top=4pt, bottom=4pt,
+  arc=4pt
+}
+
+\newtcolorbox[auto counter, number within=section]{zadatak}[1][]{
+  colback=taskbg, colframe=taskborder,
+  fonttitle=\bfseries\sffamily,
+  title={Zadatak~\thetcbcounter \ifthenelse{\equal{#1}{}}{}{~---~#1}},
+  breakable, enhanced, left=6pt, right=6pt, top=4pt, bottom=4pt,
+  arc=4pt
+}
+
+\newtheorem*{napomena}{Napomena}
+
+% theorem-like environments used in chapters
+\newtheorem{propozicija}{Propozicija}[section]
+
+\newcommand{\Sig}{\Sigma}
+\newcommand{\eps}{\varepsilon}
+
+\usepackage{titlesec}
+\titleformat{\section}{\large\bfseries\sffamily}{}{0em}{\thesection\quad}[\vspace{-0.3em}\rule{\linewidth}{0.4pt}]
+\titleformat{\subsection}{\normalsize\bfseries\sffamily}{}{0em}{\thesubsection\quad}
+
+\begin{document}
+
+% =========================================================
+%  Naslovna stranica
+% =========================================================
+\begin{titlepage}
+\thispagestyle{empty}
+\centering
+
+\vspace*{0.8cm}
+
+% --- Vrh: institucija ---
+{\sffamily\large Sveučilište Jurja Dobrile u Puli}\\[0.4em]
+{\sffamily\normalsize Fakultet informatike}\\[0.4em]
+{\sffamily\small Preddiplomski studij informatike}
+
+\vspace{2.8cm}
+
+% --- Dekorativna gornja crta ---
+{\color{defborder}\rule{0.85\linewidth}{2pt}}\\[3pt]
+{\color{defborder}\rule{0.85\linewidth}{0.4pt}}
+
+\vspace{1.2cm}
+
+% --- Glavni naslov ---
+{\fontsize{46}{52}\selectfont\bfseries\sffamily%
+  \color{defborder!75!black} Formalni jezici\par}
+
+\vspace{0.5em}
+
+{\Large\sffamily\itshape skripta za pripremu ispita}
+
+\vspace{1.2cm}
+
+% --- Dekorativna donja crta (zrcalno) ---
+{\color{defborder}\rule{0.85\linewidth}{0.4pt}}\\[3pt]
+{\color{defborder}\rule{0.85\linewidth}{2pt}}
+
+\vspace{2.2cm}
+
+% --- Moto / kratki citat ---
+\begin{minipage}{0.78\textwidth}
+\centering
+{\Large\itshape ``Pripada li ova riječ ovome jeziku?''}\\[0.8em]
+{\sffamily\normalsize Jedno pitanje. Pet klasa jezika.\\
+Beskonačno mnogo posljedica.}
+\end{minipage}
+
+\vfill
+
+% --- Autor i godina, u boksu ---
+\begin{tcolorbox}[
+  width=0.62\textwidth,
+  colback=defbg,
+  colframe=defborder,
+  arc=5pt,
+  boxrule=0.6pt,
+  halign=center,
+  left=10pt, right=10pt, top=8pt, bottom=8pt
+]
+{\large\bfseries\sffamily Petar Prenc}\\[0.3em]
+{\sffamily\small Akademska godina 2025./2026.}
+\end{tcolorbox}
+
+\vspace{0.8cm}
+
+{\sffamily\small Pula, \today}
+
+\vspace{0.5cm}
+\end{titlepage}
+
+% =========================================================
+%  Predgovor
+% =========================================================
+\chapter*{Predgovor}
+\addcontentsline{toc}{chapter}{Predgovor}
+
+\begin{quote}
+\itshape
+Najbolji način da nešto stvarno naučiš jest da to objasniš nekom drugom.
+Ova skripta upravo je to: pokušaj da samom sebi --- a sad i vama --- na
+jednom mjestu objasnim što su to formalni jezici, na način koji se može
+pročitati u jednom dahu, bez otvaranja desetak izvora paralelno.
+\end{quote}
+
+
+% ================================================================
+\section*{Što je ovo i zašto postoji}
+% ================================================================
+
+Skripta je nastala iz vrlo obične potrebe. Pripremajući se za ispit iz
+kolegija \emph{Formalni jezici}, primijetio sam da je gradivo na
+predavanjima i u udžbeniku raspršeno: definicije ovdje, primjeri ondje,
+dokazi negdje između. Da bih ga svladao, morao sam ga prvo okupiti na
+jednom mjestu --- vlastitim riječima, slijedeći jednu jasnu nit od
+početka do kraja. Rezultat te vježbe je tekst pred vama.
+
+Cilj je skroman: \textbf{biti razumljiv prijateljski vodič kroz gradivo},
+ništa više. Ne pretendira zamijeniti službeni udžbenik niti biti
+referenca posljednje riječi u svakom dokazu. Želi biti ono što bih i sam
+htio imati u rukama tjedan dana prije ispita --- kratak, jasan,
+pun primjera i s naglaskom na intuiciji.
+
+% ================================================================
+\section*{Što skripta sadrži}
+% ================================================================
+
+Materijal prati \textbf{Chomskyjevu hijerarhiju} odozdo prema gore.
+Krećemo od najjednostavnijih objekata --- riječi i jezika kao skupova
+riječi --- i postupno gradimo sve moćnije formalizme. Svako poglavlje
+prirodno se nastavlja na prethodno: regularni izrazi vode do automata,
+automati i izrazi pokazuju se ekvivalentnima, ekvivalencija se proteže
+i na linearne gramatike, a kad ti formalizmi postanu preuski, prelazimo
+na bezkontekstne, kontekstne i konačno Turingove strojeve.
+
+\begin{kljucno}[Plan skripte]
+\begin{itemize}[itemsep=2pt]
+  \item \textbf{Poglavlje 1} --- Jezici i osnovne operacije: abeceda,
+        riječ, $\Sig^*$, konkatenacija, Kleeneva zvijezda, Chomskyjeva
+        hijerarhija.
+  \item \textbf{Poglavlje 2} --- Regularni izrazi i njihova algebra.
+  \item \textbf{Poglavlje 3} --- Konačni automati (KA, NKA),
+        $\eps$-prijelazi, partitivna konstrukcija.
+  \item \textbf{Poglavlje 4} --- Ekvivalentnost klasa regularnih jezika
+        (RI, KA, NKA, DLG, LLG); Thompsonova konstrukcija, Ardenovo pravilo.
+  \item \textbf{Poglavlje 5} --- Bezkontekstni jezici, potisni automati,
+        Chomskyjeva normalna forma, CYK algoritam.
+  \item \textbf{Poglavlje 6} --- Leme o pumpanju za regularne i
+        bezkontekstne jezike.
+  \item \textbf{Poglavlje 7} --- Kontekstni jezici, ograničeni automati,
+        kontekstne i monotone gramatike.
+  \item \textbf{Poglavlje 8} --- Turingovi strojevi, odlučivost, svođenje
+        i dijagonalizacija.
+\end{itemize}
+\end{kljucno}
+
+% ================================================================
+\section*{Kako čitati skriptu}
+% ================================================================
+
+Tekst je organiziran tako da se može čitati linearno --- svaki pojam
+uvodi se prije nego što se koristi. Ako već imate nešto pripreme,
+slobodno preskačite ono što vam je poznato; ali ako pojma nemate odakle
+krenuti, \textbf{počnite od početka}, najbolje s olovkom u ruci.
+
+Vizualno je sve organizirano u obojene okvire pa se brzo prepoznaje
+što se gleda:
+
+\medskip
+\noindent
+\begin{tabular}{ll}
+  \textcolor{defborder}{$\blacksquare$}~\textbf{Plavo (definicije)}
+    & precizan, formalan iskaz pojma \\
+  \textcolor{exborder}{$\blacksquare$}~\textbf{Zeleno (primjeri)}
+    & konkretne ilustracije, ``vidi i probaj'' \\
+  \textcolor{keyborder}{$\blacksquare$}~\textbf{Žuto (ključne ideje)}
+    & ono što morate ponijeti sa sobom \\
+  \textcolor{taskborder}{$\blacksquare$}~\textbf{Ljubičasto (zadaci)}
+    & vježbe za samostalan rad \\
+\end{tabular}
+
+\medskip
+\noindent
+Na kraju svakog poglavlja stoji kratak \textbf{Sažetak} s tablicom
+najvažnijih oznaka --- pogodno za brzo ponavljanje neposredno pred
+ispit.
+
+% ================================================================
+\section*{O stilu i izvorima}
+% ================================================================
+
+Naglasak je na \emph{intuiciji} i \emph{povezanosti} pojmova, a ne na
+potpunoj formalnoj striktnosti svakog dokaza. Tamo gdje su dokazi
+tehnički zahtjevni, dane su \emph{skice} ili upute na izvore. Cilj
+nije matematička virtuoznost --- cilj je da, kad vam netko pokaže
+neki jezik, instinktivno znate razmišljati: \emph{regularan?
+bezkontekstni? mogu li ga uopće prepoznati strojem?}
+
+Glavni izvori bili su predavanja i službene bilješke kolegija, te
+Sipserov \emph{Introduction to the Theory of Computation}.
+Eventualne pogreške isključivo su moje --- ako ih primijetite,
+slobodno javite na
+\href{mailto:petar.prenc@gmail.com}{petar.prenc@gmail.com}.
+
+\vspace{1.5em}
+\begin{flushright}
+\itshape Sretno!\\[0.3em]
+Petar Prenc\\
+Pula, \today
+\end{flushright}
+
+\cleardoublepage
+
+% =========================================================
+%  Sadrzaj
+% =========================================================
+\tableofcontents
+\cleardoublepage
+
+% =========================================================
+%  Poglavlja
+% =========================================================
+\include{1}
+\include{2}
+\include{3}
+\include{4}
+\include{5}
+\include{6}
+\include{7}
+\include{8}
+
+\end{document}

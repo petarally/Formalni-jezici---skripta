@@ -1,0 +1,313 @@
+% Chapter 4 — includable by main.tex
+\chapter{Ekvivalentnost klasa regularnih jezika}
+\label{chap:4}
+
+\begin{quote}
+\itshape
+U dosad uveli nekoliko načina opisivanja regularnih jezika, a ovo
+poglavlje zatvara krug — pokazat ćemo ekvivalentnost različitih formalizama.
+\end{quote}
+
+\newpage
+
+% ================================================================
+\section{Krug koji treba zatvoriti}
+% ================================================================
+
+Dosad smo uveli nekoliko načina opisivanja regularnih jezika:
+\begin{itemize}
+  \item \textbf{RI} --- regularni izrazi (poglavlje 2)
+  \item \textbf{KA} --- deterministički konačni automati (poglavlje 3)
+  \item \textbf{NKA} --- nedeterministički konačni automati (poglavlje 3)
+  \item \textbf{DLG} --- desnolinearne gramatike (ovo poglavlje)
+  \item \textbf{LLG} --- lijevolinearne gramatike (ovo poglavlje)
+\end{itemize}
+
+Svaki od ovih formalizma definira neku klasu jezika. Ključni teorem
+ovog poglavlja kaže da su sve te klase iste:
+\[
+  \mathrm{Reg_{KA}} = \mathrm{Reg_{NKA}} = \mathrm{Reg_{RI}}
+  = \mathrm{Reg_{DLG}} = \mathrm{Reg_{LLG}}.
+\]
+Tu klasu jednostavno zovemo $\mathrm{Reg}$ --- \textbf{klasa regularnih
+jezika}.
+
+Dokaz ide ``u krug'': pokazujemo $\mathrm{RI} \to \mathrm{NKA} \to
+\mathrm{KA} \to \mathrm{DLG} \to \mathrm{RI}$, a $\mathrm{LLG}$
+uključujemo pomoću operacije reverza.
+
+% ================================================================
+\section{Desnolinearne gramatike (DLG)}
+% ================================================================
+
+\begin{definicija}[Gramatika]
+\textbf{Gramatika} nad abecedom $\Sig$ je transformacijski sustav
+$G = (V, \Sig, \to, S)$, gdje je:
+\begin{itemize}
+  \item $V$ --- konačni skup \textbf{varijabli} (disjunktan od $\Sig$),
+  \item $Y := \Sig \cup V$ --- skup svih \textbf{simbola},
+  \item $S \in V$ --- \textbf{početna varijabla},
+  \item ${\to} \subseteq Y^+ \times Y^*$ --- konačna relacija
+        \textbf{pravila} (na lijevoj strani barem jedna varijabla).
+\end{itemize}
+Pisemo $u \Rightarrow v$ ako postoji pravilo $s \to t$ i rijeci $a, b$
+takve da je $u = asb$ i $v = atb$. Gramatika \textbf{generira} jezik
+\[
+  L(G) := \{w \in \Sig^* : S \Rightarrow^* w\}.
+\]
+\end{definicija}
+
+Ovo je opća definicija gramatike. Za regularne jezike dovoljne su nam
+gramatike s \emph{jako} ograničenim pravilima:
+
+\begin{definicija}[Desnolinearna gramatika]
+Gramatika $G$ je \textbf{desnolinearna} (DLG) ako su sva njena pravila
+jednog od dva oblika:
+\[
+  A \to \alpha B \qquad \text{ili} \qquad A \to \eps,
+\]
+gdje su $A, B \in V$ varijable, a $\alpha \in \Sig$ znak.
+\end{definicija}
+
+Intuicija: svako pravilo ili ``pojede'' jedan znak i zamijeni varijablu
+s novom varijablom (koja će pojesti sljedeći), ili varijabla nestane
+(kraj izvoda). Varijabla je uvijek na \emph{desnom} kraju međurječita
+--- otuda ime ``desnolinearna''.
+
+\begin{primjer}
+DLG s varijablama $\{S, A\}$ i pravilima
+$S \to aA$, $A \to aA$, $A \to bA$, $A \to \eps$
+generira jezik svih rijeci koje pocinju s $a$ i zatim mogu imati bilo
+sto. Regularni izraz: $a(a \cup b)^*$.
+\end{primjer}
+
+% ================================================================
+\section{Pretvorba KA $\to$ DLG}
+% ================================================================
+
+Svaki KA mozemo pretvoriti u ekvivalentnu DLG na prirodan nacin:
+stanja postaju varijable, prijelazi postaju pravila.
+
+\begin{propozicija}
+Svaki KA-regularni jezik je DLG-regularan.
+\end{propozicija}
+
+\textit{Dokaz (konstrukcija).}
+Neka je $M = (Q, \Sig, \delta, q_0, F)$ KA koji prepoznaje jezik $L$.
+Konstruiramo DLG $G$ ovako:
+\begin{itemize}
+  \item Za svako stanje $q \in Q$ uvedemo varijablu $V_q$.
+  \item Početna varijabla: $S := V_{q_0}$.
+  \item Za svaki prijelaz $\delta(q, \alpha) = p$ dodamo pravilo
+        $V_q \to \alpha V_p$.
+  \item Za svako završno stanje $q \in F$ dodamo pravilo $V_q \to \eps$.
+\end{itemize}
+Moze se pokazati indukcijom da za svako stanje $q \in Q$ vrijedi
+\[
+  L(Q, \Sig, \delta, q, F) = L(V, \Sig, \to, V_q),
+\]
+tj.\ varijabla $V_q$ generira tocno rijeci koje KA prihvaca krenuvsi
+iz stanja $q$. Za $q := q_0$ dobijemo $L(M) = L(G)$. \qed
+
+\begin{primjer}
+KA za rijeci koje zavrsavaju na $ab$ iz poglavlja 3 pretvara se u DLG:
+\begin{align*}
+  V_{q_0} &\to a V_{q_a} \mid b V_{q_0} \\
+  V_{q_a} &\to a V_{q_a} \mid b V_{q_{ab}} \\
+  V_{q_{ab}} &\to a V_{q_a} \mid b V_{q_0} \mid \eps
+\end{align*}
+Ovo generira točno riječi koje završavaju na $ab$.
+\end{primjer}
+
+% ================================================================
+\section{Gramaticki sustav i Ardenovo pravilo}
+% ================================================================
+
+Za smjer $\mathrm{DLG} \to \mathrm{RI}$ koristimo tehniku
+\textbf{gramatickih jednadžbi}.
+
+\subsection{Gramaticki sustav}
+
+Svaka DLG zadaje \emph{sustav jednadžbi} nad jezicima: za svaku
+varijablu $A$ skupimo sva njena pravila i zapisemo jednadžbu:
+\[
+  A = \alpha_1 B_1 \cup \alpha_2 B_2 \cup \cdots \cup \alpha_k B_k
+  \;\cup\; (\eps \text{ ako ima pravilo } A \to \eps).
+\]
+Ako $A$ nema nijednog pravila, dodamo $A = \emptyset$.
+
+Supstitucijom (uvrstavanjem jednadžbi jedne u drugu) pokusavamo
+eliminirati varijable i doci do regularnog izraza za $S$.
+
+\subsection{Problem: rekurzija}
+
+Supstitucija funkcionira kada nema rekurzije. Ali DLG cesto ima
+rekurzivna pravila poput $A = aA \cup b$, gdje se $A$ pojavljuje
+s obje strane. Sto tada?
+
+\begin{propozicija}[Ardenovo pravilo]
+Jednadžba $X = AX \cup B$ ima rjesenje $X = A^* B$.
+Ako je $A$ pozitivan, to je \emph{jedino} rjesenje.
+Inace, to je \emph{najmanji} skup koji zadovoljava jednadžbu.
+\end{propozicija}
+
+\textit{Provjera.} Uvrstimo $X = A^*B$ u jednadžbu:
+\[
+  A(A^*B) \cup B = (AA^*)B \cup B = A^+B \cup \eps B = (A^+ \cup \eps)B = A^*B. \; \checkmark
+\]
+
+Ardenovo pravilo je analogon formule za geometrijski red:
+$a \cdot r + b = r$ ima rjesenje $r = b/(1-a)$, tj.\ $r = a^* b$
+u jezicnoj algebri.
+
+\begin{primjer}[Pretvorba DLG $\to$ RI]
+Pretvorimo DLG s pravilima:
+\[
+  S \to aA \mid bB, \quad
+  A \to aA \mid bA \mid aN, \quad
+  B \to aB \mid bB \mid bN, \quad
+  N \to \eps.
+\]
+Gramaticki sustav ($N = \eps$ odmah uvrstimo):
+\begin{align*}
+  S &= aA \cup bB \\
+  A &= aA \cup bA \cup a = (a \cup b)A \cup a
+\end{align*}
+Po Ardenovom pravilu ($a \cup b$ je pozitivan):
+$A = (a \cup b)^* a$.
+
+Analogno: $B = (a \cup b)^* b$.
+
+Uvrstimo u $S$:
+\[
+  S = a(a \cup b)^*a \cup b(a \cup b)^*b.
+\]
+To su sve riječi koje počinju i završavaju istim slovom! \checkmark
+\end{primjer}
+
+% ================================================================
+\section{RI $\to$ NKA: Thompsonova konstrukcija}
+% ================================================================
+
+Sad zatvaramo krug s druge strane: svaki regularni izraz mozemo
+pretvoriti u NKA. Dokaz ide indukcijom po izgradnji izraza.
+
+\begin{propozicija}
+Svaki RI-regularni jezik je NKA-regularan.
+\end{propozicija}
+
+\textit{Dokaz (Thompsonova konstrukcija).}
+Za svaki inicijalni jezik konstruiramo trivijalni NKA:
+\begin{itemize}
+  \item $\emptyset$: jedno stanje, nema prijelaza, nema zavrsnih stanja.
+  \item $\eps$: jedno stanje, ono je i početno i završno, nema prijelaza.
+  \item $\{\alpha\}$: dva stanja, prijelaz $\alpha$ od početnog do završnog.
+\end{itemize}
+Za slozenije izraze koristimo konstrukcije iz poglavlja 3
+(unija s $\eps$-prijelazima, konkatenacija, zvijezda). \qed
+
+% ================================================================
+\section{Lijevolinearne gramatike i reverzi}
+% ================================================================
+
+\begin{definicija}[Lijevolinearna gramatika]
+Gramatika je \textbf{lijevolinearna} (LLG) ako su sva njena pravila
+oblika:
+\[
+  A \to B\alpha \qquad \text{ili} \qquad A \to \eps,
+\]
+dakle varijabla je na \emph{lijevom} kraju desne strane pravila.
+\end{definicija}
+
+LLG generiraju iste jezike kao i DLG (a time i sve ostale klase),
+ali to nije odmah ocito. Dokazujemo to pomocu \textbf{reverza}.
+
+\begin{definicija}[Reverz]
+\textbf{Reverz} rijeci $w = \alpha_1 \alpha_2 \cdots \alpha_n$ je
+$w^R = \alpha_n \cdots \alpha_2 \alpha_1$.
+\textbf{Reverz jezika} je $L^R = \{w^R : w \in L\}$.
+\end{definicija}
+
+Za regularne izraze vrijede jednostavne formule:
+\[
+  \emptyset^R = \emptyset, \quad \eps^R = \eps, \quad \alpha^R = \alpha,
+\]
+\[
+  (LM)^R = M^R L^R, \quad (L \cup M)^R = L^R \cup M^R, \quad (L^*)^R = (L^R)^*.
+\]
+
+Iz ovih formula indukcijom slijedi:
+
+\begin{propozicija}
+Reverz svakog RI-regularnog jezika je ponovo RI-regularan.
+Dakle, klasa $\mathrm{Reg_{RI}}$ zatvorena je na reverz.
+\end{propozicija}
+
+Sada, DLG koja generira jezik $L$ lako se pretvori u LLG koja generira
+$L^R$ (samo okrenimo redoslijed u pravilima). Kako je $\mathrm{Reg_{RI}}$
+zatvorena na reverz, zakljucujemo:
+\[
+  \mathrm{Reg_{LLG}} = (\mathrm{Reg_{DLG}})^R = (\mathrm{Reg_{RI}})^R = \mathrm{Reg_{RI}}.
+\]
+
+% ================================================================
+\section{Zakljucak: sve je isto}
+% ================================================================
+
+Evo kompletnog kruga pretvorbi:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.6}
+\begin{tabular}{lll}
+\hline
+\textbf{Od} & \textbf{Do} & \textbf{Metoda} \\
+\hline
+RI & NKA & Thompsonova konstrukcija (indukcija po izrazu) \\
+NKA & KA & Partitivna konstrukcija \\
+KA & DLG & Stanja $\leftrightarrow$ varijable, prijelazi $\leftrightarrow$ pravila \\
+DLG & RI & Gramaticki sustav + Ardenovo pravilo \\
+DLG & LLG & Reverz (okretanje pravila) \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{kljucno}
+Sve ove pretvorbe su algoritamske --- dajte mi jedno, dat cu vam
+bilo koje drugo. Svi formalizmi su jednako mocni; razlika je samo
+u pogodnosti za razlicite svrhe. RI je dobar za opis, KA za
+implementaciju, DLG za vezu s gramatikama.
+\end{kljucno}
+
+\begin{zadatak}
+\begin{enumerate}[label=(\alph*), itemsep=4pt]
+  \item Pretvorite regularni izraz $a^*(b \cup c)^+$ u NKA
+        Thompsonovom konstrukcijom.
+  \item Primijenite partitivnu konstrukciju na rezultat.
+  \item Pretvorite KA koji ste dobili u DLG.
+  \item Rijesite gramaticki sustav te DLG i dobijte regularni izraz.
+        Usporedite s polaznim izrazom.
+  \item Napisite LLG ekvivalentnu DLG iz (c).
+\end{enumerate}
+\end{zadatak}
+
+% ================================================================
+\section*{Sazetak}
+% ================================================================
+
+Pokazali smo da pet naizgled razlicitih formalizma opisuju istu klasu:
+
+\medskip
+\noindent
+\begin{tabular}{ll}
+  $\mathrm{Reg_{KA}}$ & jezici KA \\
+  $\mathrm{Reg_{NKA}}$ & jezici NKA \\
+  $\mathrm{Reg_{RI}}$ & regularni izrazi \\
+  $\mathrm{Reg_{DLG}}$ & desnolinearne gramatike \\
+  $\mathrm{Reg_{LLG}}$ & lijevolinearne gramatike \\
+\end{tabular}
+
+\medskip
+Sve su iste klase. Tu klasu zovemo $\mathrm{Reg}$ --- \textbf{regularni
+jezici}. U sljedecem poglavlju prelazimo na bezkontekstne jezike ---
+prvu pravu nadklasu.
+

@@ -1,0 +1,290 @@
+% Chapter 7 — includable by main.tex
+\chapter{Kontekstni jezici}
+\label{chap:7}
+
+\begin{quote}
+\itshape
+Bezkontekstni jezici ne mogu prebrojati tri stvari odjednom.
+Kontekstni jezici rješavaju i taj problem --- dodavanjem trake
+ograničene na duljinu ulaza. Klasa Kon je u mnogo čemu lijepa:
+zatvorena je na sve skupovne operacije, a prepoznavanje je odlučivo.
+\end{quote}
+
+
+% ================================================================
+\section{Motivacija: što ne može BK?}
+% ================================================================
+
+U poglavlju 6 dokazali smo da $L_\equiv = \{a^n b^n c^n \mid n \geq 1\}$
+nije bezkontekstan. Intuitivno: potisni automat može uskladiti
+broj $a$-ova i $b$-ova (stavi $a$-ove na stog, skidaj za svaki $b$),
+ali jednom kad skine sve s hrpe, više ne zna koliko je $b$-ova prebrojio ---
+to je točno potrebno za provjeru $c$-ova.
+
+Rješenje: umjesto stoga koji nestaje, trebamo traku po kojoj se
+možemo kretati u oba smjera. Ključno ograničenje: traka je dugačka
+\emph{točno koliko i ulazna riječ}. Nema više memorije od ulaza.
+
+% ================================================================
+\section{Ograniceni automat (OA)}
+% ================================================================
+
+\begin{definicija}[Ograniceni automat]
+\textbf{Ograniceni automat} (OA) je uredena sestorka
+\[
+  O = (Q,\, \Sig,\, \Gamma,\, \Delta,\, q_0,\, q_X),
+\]
+gdje su $Q$, $\Sig \subseteq \Gamma$, $q_0$, $q_X$ kao obicno, a
+\[
+  \Delta \subseteq Q \times \Gamma \times Q \times \Gamma \times \{-1, 1\}
+\]
+je relacija prijelaza. Prijelaz $(q, \alpha, p, \beta, d)$ znaci:
+``u stanju $q$, citajuci $\alpha$ na poziciji $m$, predi u stanje $p$,
+zapisi $\beta$ na poziciju $m$, te se pomakni na poziciju $m + d$
+(ali ne izlazi s trake: $0 \leq m + d < |w|$).''
+
+OA prihvaća riječ $w$ ako iz početne konfiguracije $(q_0, 0, w)$
+može doći do neke završne konfiguracije $(q_X, m, t)$.
+\end{definicija}
+
+\begin{napomena}
+Kljucne razlike od PA:
+\begin{itemize}
+    \item Traka je ograničena na $|w|$ znakova --- nema više.
+    \item Može se kretati lijevo i desno (PA samo naprijed).
+    \item Može pisati po traci (modifikacija ulaza).
+    \item Kao i PA: OA je \textbf{nedeterminističan}, a
+      deterministični i nedeterministični OA \emph{nisu} ekvivalentni
+      (za razliku od KA) --- ovo je otvoreni problem!
+\end{itemize}
+\end{napomena}
+
+\begin{primjer}[OA za $L_\equiv$]
+Pseudokod OA koji prepoznaje $L_\equiv = \{a^n b^n c^n\}$:
+\begin{enumerate}
+    \item Označi prvi $a$ i pročitaj sva $a$ dalje. Ako nema $a$, odbij.
+    \item Označi prvi $b$ iza svih $a$-ova. Ako nema $b$, odbij.
+    \item Označi prvi $c$ iza svih $b$-ova. Ako nema $c$, odbij.
+    \item Vrati se lijevo do zadnjeg označenog $a$.
+    \item Ponovi od koraka 1 s prvim neoznačenim $a$.
+    \item Kad su sva $a$ označena: provjeri da su sva $b$ i $c$
+      također označena (ne smije biti neoznačenih). Prihvati.
+\end{enumerate}
+Svaki prolaz označi točno jedno $a$, jedno $b$ i jedno $c$,
+sto osigurava $|a| = |b| = |c|$.
+\end{primjer}
+
+\subsection{Odlučivost $A_\text{OA}$}
+
+Za razliku od Turingovih strojeva, za OA uvijek postoji konačno
+mnogo konfiguracija (duljina je fiksna $|w|$), pa možemo problem
+prihvaćanja riješiti obilazak grafa:
+
+Za OA $O$ i rijec $w$, konstruiramo konacni graf ciji su vrhovi
+sve moguce konfiguracije duljine $|w|$:
+\[
+  \text{broj vrhova} = |Q| \cdot |w| \cdot |\Gamma|^{|w|}.
+\]
+Problem prihvaćanja svodi se na dostupnost završnih konfiguracija
+iz početne --- što rješavamo DFS-om ili BFS-om.
+
+\begin{napomena}
+Graf je ogroman (eksponencijalan u $|w|$), pa algoritam nije
+polinoman. Ali je konačan, pa je problem \emph{odlučiv}.
+\end{napomena}
+
+% ================================================================
+\section{Poboljsanja OA}
+% ================================================================
+
+Osnovna definicija OA je praktično nezgrapna. Pokazujemo niz
+ekvivalentnih poboljšanja:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{ll}
+\hline
+\textbf{Poboljsanje} & \textbf{Ideja simulacije} \\
+\hline
+Nemijenjanje trake & svaki $(q, *, p, *, d)$ postaje $|\Gamma|$ prijelaza \\
+Više tragova & Kartezijev produkt abeceda tragova \\
+Detekcija rubova & trag s oznakama $\{\wedge, \sqcup\}$ \\
+Stajanje na mjestu ($d = 0$) & lijevo pa desno, uz provjeru ruba \\
+Više završnih stanja & novo stanje $q_X$, $\eps$-prijelazi iz svakog $q \in F$ \\
+Konačne varijable & produkt $Q \times S$ za varijablu iz $S$ \\
+Više trakova (s gl.\ nezavisnim) & $2k$ tragova, svaka glava kao oznaka \\
+\hline
+\end{tabular}
+\end{center}
+
+Svako od ovih poboljšanja ekvivalentno je originalnom OA u smislu
+da prepoznaje istu klasu jezika. Dokazi idu metodom \textbf{simulacije}:
+poboljšani stroj uvijek može sve što može obični OA (trivijalni smjer),
+a obični OA simulira poboljšanog imitirajući svaki elementarni korak.
+
+% ================================================================
+\section{Kontekstne i monotone gramatike}
+% ================================================================
+
+\begin{definicija}[Kontekstna gramatika]
+Pravilo $uAv \to ubv$ je \textbf{kontekstno} ako su
+$u, v \in Y^*$, $A \in V$ i $b \in Y^+$. Dakle: varijabla $A$ moze
+se zamijeniti s $b$ samo u ``kontekstu'' $u \cdot v$ oko nje.
+
+\textbf{Kontekstna gramatika} (KG) je gramatika u kojoj su sva pravila
+kontekstna. Jezik je \textbf{kontekstan} ako ga generira neka KG.
+\end{definicija}
+
+\begin{definicija}[Monotona gramatika]
+Pravilo $u \to v$ je \textbf{monotono} ako $|u| \leq |v|$ --- desna strana
+nije kraca od lijeve. Gramatika je \textbf{monotona} (MG) ako su
+joj sva pravila monotona.
+\end{definicija}
+
+\begin{propozicija}
+Klase $\mathrm{KG}$, $\mathrm{MG}$ i $\mathrm{OA}$ generiraju/prepoznaju
+istu klasu jezika: \textbf{kontekstne jezike} Kon.
+Vrijedi $\mathrm{BK}_+ \subsetneq \mathrm{Kon}$ (svi pozitivni BK-jezici
+su kontekstni, ali $L_\equiv$ je kontekstan a nije BK).
+\end{propozicija}
+
+\subsection{Monotona gramatika za $L_\equiv$}
+
+Primjer monotone gramatike koja generira $L_\equiv$:
+\[
+  S \to abc \mid aSBc, \quad cB \to Bc, \quad bB \to bb.
+\]
+Izvod $a^n b^n c^n$ koristi pravilo $S \to aSBc$ tocno $n-1$ puta,
+zatim $S \to abc$, pa ``proburbla'' svaki $B$ ulijevo pokraj $c$-ova
+(pravilo $cB \to Bc$), i na kraju pretvori svaki $B$ u $b$ (pravilo $bB \to bb$).
+
+Da su pravila monotona lako se provjeriti: sve desne strane su iste
+ili dulje od lijevih. Da gramatika generira točno $L_\equiv$ dokazujemo
+\textbf{invarijantom}: riječ $w$ u izvodu je ``balansirana'' ako ima jednak
+broj $a$-ova, $b$-ova, $B$-ova i $c$-ova zajedno gledano.
+
+\subsection{Pretvorba MG $\to$ KG}
+
+Pretvorba ide u dvije faze analogno pretvorbi BKG u ChNF:
+\begin{enumerate}
+  \item \textbf{TERM}: znakove koji se pojavljuju uz ostalo zamijenimo
+        novim varijablama (i na lijevoj i na desnoj strani!).
+  \item \textbf{BIN}: pravila s $n \geq 2$ simbola s lijeve strane
+        $A_1 \cdots A_n \to B_1 \cdots B_m$ (gdje $m \geq n \geq 2$)
+        zamijenimo s $2n$ kontekstnih pravila koja ``postepeno''
+        zamjenjuju $A_i$ s $C_i$, pa $C_i$ s $B_i$.
+\end{enumerate}
+
+% ================================================================
+\section{Ekvivalentnost OA i MG}
+% ================================================================
+
+\subsection{MG $\to$ OA}
+
+Za MG $G$, OA nedeterministički ``pogađa'' izvod riječi:
+koristi drugi trag za međuvriječi, primjenjuje pravila u nedeterminis-
+tičnom redoslijedu, i prihvaća kad se drugi trag poklopi s ulazom.
+Ključno: jer su pravila monotona, međuvriječ nikad nije dulji od
+ulaza --- dakle stane na traci.
+
+\subsection{OA $\to$ MG}
+
+Ovaj smjer je tehnički složeniji. Koristimo \textbf{jednostavni OA} (JOA)
+koji prihvaća $w$ samo u konfiguraciji $(q_X, 0, w)$ --- jedinstvenoj
+završnoj konfiguraciji.
+
+Ideja: kodiramo konfiguracije OA kao rijeci nad $Y = Q \cup \Gamma$,
+jer svaka konfiguracija $(q, m, t_0 \cdots t_{n-1})$ odgovara rijeci
+$t_0 \cdots t_{m-1} \, q \, t_m \cdots t_{n-1}$.
+
+Pravila gramatike simuliraju prijelaze OA:
+\begin{itemize}
+  \item Za prijelaz $(q, \alpha, p, \beta, 1)$: pravilo $q\alpha \to \beta p$.
+  \item Za prijelaz $(q, \alpha, p, \beta, -1)$: pravilo $\gamma q\alpha \to p\gamma\beta$
+        za svaki $\gamma \in \Gamma$.
+\end{itemize}
+
+Dodatni trik: objedinjavanje znakova (``sljepljivanje'' pomocnih
+simbola s pravcim znakovima) osigurava da gramatika ostane monotona
+dok uklanjamo rubne oznake.
+
+% ================================================================
+\section{Zatvorenost klase Kon}
+% ================================================================
+
+\begin{propozicija}
+Klasa $\mathrm{Kon}$ zatvorena je na sve skupovne i jezicne operacije:
+$\cup$, $\cap$, $^c$ (komplement), $\setminus$, $\cdot$, $^+$.
+\end{propozicija}
+
+Zatvorenost na uniju, konkatenaciju i plus slijedi identicki kao za BK
+(dodavanjem novog početnog simbola).
+
+Zatvorenost na \textbf{presjek} slijedi iz ``serijskog spajanja'' JOA:
+završno stanje prvog postaje početno stanje drugog.
+Budući da JOA čuva traku i poziciju, drugi automat počinje točno
+u stanju u kojemu je prvi zavrsio.
+
+Zatvorenost na \textbf{komplement} je tezi:
+
+\begin{propozicija}[Immerman--Szelepcs\'enyi, 1988]
+Komplement kontekstnog jezika je kontekstan.
+\end{propozicija}
+
+Ovo je netrivi jalan teorem (dokazan tek 1988., neovisno od dva
+tako sto pokaze da \emph{ne postoji} prihvacajuca grana za $w$.
+autora). Ideja: nedeterministični OA koji prepoznaje komplement
+koristi tehniku ``brojenja'' --- nedeterministički prihvaća $w \notin L$
+tako što pokaže da \emph{ne postoji} prihvaćajuća grana za $w$.
+tako sto pokaze da \emph{ne postoji} prihvacajuca grana za $w$.
+
+% ================================================================
+\section{Usporedba klasa}
+% ================================================================
+
+\begin{center}
+\renewcommand{\arraystretch}{1.6}
+\begin{tabular}{lllll}
+\hline
+& \textbf{Reg} & \textbf{BK} & \textbf{Kon} & \textbf{RE} \\
+\hline
+Automat & KA & PA & OA & TP \\
+Gramatika & DLG/LLG & BKG & KG/MG & OG \\
+  Memorija & ništa & stog & ogr.\ traka & neogr.\ traka \\
+Zatvorena $\cup$ & \checkmark & \checkmark & \checkmark & \checkmark \\
+Zatvorena $\cap$ & \checkmark & \texttimes & \checkmark & \checkmark \\
+Zatvorena $^c$ & \checkmark & \texttimes & \checkmark & \texttimes \\
+ \(A_L\) odlučiv? & \checkmark & \checkmark & \checkmark & samo poluodl. \\
+ \(E_L\) odlučiv? & \checkmark & \checkmark & \texttimes & \texttimes \\
+ \(\mathrm{EQ}_L\) odlučiv? & \checkmark & \texttimes & \texttimes & \texttimes \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{zadatak}
+\begin{enumerate}[label=(\alph*), itemsep=4pt]
+  \item Konstruirajte OA koji prepoznaje $\{ww^R \mid w \in \{a,b\}^*\}$.
+  \item Napišite monotonu gramatiku za $\{a^n b^n c^n d^n \mid n \geq 1\}$.
+  \item Dokazite da je $\{a^{2^n} \mid n \geq 0\}$ kontekstan jezik.
+  \item Zasto klasa Kon nije zatvorena na Kleenevu zvijezdu?
+        Koji je problem s $\eps$?
+\end{enumerate}
+\end{zadatak}
+
+% ================================================================
+\section*{Sazetak}
+% ================================================================
+
+\medskip\noindent
+\begin{tabular}{ll}
+  OA & ograniceni automat: traka duljine $|w|$, kretanje lijevo-desno \\
+  JOA & jednostavni OA: jedinstven zavrsni uvjet \\
+  KG & kontekstna gramatika: $uAv \to ubv$ \\
+  MG & monotona gramatika: $|u| \leq |v|$ \\
+  $\mathrm{OA} \equiv \mathrm{KG} \equiv \mathrm{MG}$ & svi opisuju klasu Kon \\
+  I-S teorem & $\mathrm{Kon}$ zatvorena na komplement \\
+\end{tabular}
+
+\medskip\noindent
+U sljedećem poglavlju prelazimo na \textbf{Turingove strojeve} ---
+strojeve bez ikakvog ograničenja na traku --- i pitanja odlučivosti.

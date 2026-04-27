@@ -1,0 +1,286 @@
+% Chapter 2 — includable by main.tex
+\chapter{Regularni izrazi}
+\label{chap:2}
+
+\begin{quote}
+\itshape
+U prvom poglavlju naučili smo što su jezici i kako ih kombinirati.
+Sad postavljamo pitanje: kako ih \emph{opisati}? Regularni izrazi daju
+nam kompaktan, elegantan formalizam koji bi trebao izgledati poznato ---
+vjerojatno ste već koristili \texttt{grep} ili \texttt{re} modul u Pythonu.
+Ovo poglavlje tu intuiciju pretvara u preciznu matematiku.
+\end{quote}
+
+
+% ================================================================
+\section{Motivacija: kako opisati beskonačni jezik?}
+% ================================================================
+
+Zamislite da vam netko kaže: ,,napiši mi sve valjane e-mail adrese''.
+Odmah je jasno da taj skup ne možete nabrojati --- beskonačni je i nema
+gornje granice duljine. No ipak intuitivno znate što je valjana adresa:
+neka slova, pa \texttt{@}, pa domena. Regularni izrazi su upravo alat koji
+takav opis pretvara u preciznu matematičku definiciju.
+
+U Pythonu ste možda pisali nešto poput \verb|re.match(r'[a-z]+@[a-z]+\.[a-z]+', s)|.
+Formalni regularni izrazi koje ćemo definirati su strožija i čišća verzija
+iste ideje --- bez šarenih proširenja koja praktični jezici dodaju, ali s
+jasnom matematičkom semantikom.
+
+Ideja je jednostavna: regularni izrazi grade se od malih komadića
+(\emph{inicijalnih} ili \emph{atomarnih} jezika) kombiniranjem s tri
+operacije --- unije, konkatenacije i Kleeneve zvijezde. Ništa više.
+Pokazat će se da je to i više nego dovoljno za cijelu klasu regularnih
+jezika.
+
+% ================================================================
+\section{Definicija regularnih izraza}
+% ================================================================
+
+\begin{definicija}[RI-regularni jezik]
+Neka je $\Sig$ abeceda. \textbf{Skup RI-regularnih jezika} nad $\Sig$
+je \emph{najmanji} skup jezika koji:
+\begin{itemize}
+  \item sadrži $\emptyset$ i $\{\eps\}$ kao elemente,
+  \item sadrži $\{\alpha\}$ za svaki znak $\alpha \in \Sig$,
+  \item je zatvoren na konkatenaciju, konačnu uniju i Kleeneve operacije.
+\end{itemize}
+Jezik koji pripada tom skupu zovemo \textbf{RI-regularnim}.
+\textbf{Regularni izraz} je izraz koji pokazuje kako je taj jezik izgrađen
+od navedenih operacija.
+\end{definicija}
+
+Dakle, regularni izraz nije sam po sebi jezik --- on je \emph{recept} za
+gradnju jezika. Kao što izraz $2 \cdot 3 + 1$ nije broj već opis kako
+doći do broja $7$, regularni izraz $ab^*$ nije skup nego opis kako
+doći do skupa $\{a, ab, abb, abbb, \ldots\}$.
+
+\subsection{Inicijalni jezici}
+
+Gradivni blokovi su sljedeća tri tipa:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{cll}
+\hline
+\textbf{Izraz} & \textbf{Jezik} & \textbf{Opis} \\
+\hline
+$\emptyset$ & $\emptyset$ & prazan jezik, nema nijedne riječi \\
+$\eps$      & $\{\eps\}$  & samo prazna riječ \\
+$\alpha$    & $\{\alpha\}$ & samo jednoznakovna riječ od $\alpha$ \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{napomena}
+Pažnja na oznake: $\emptyset$ kao regularni izraz opisuje \emph{prazan jezik},
+a $\eps$ kao regularni izraz opisuje jezik $\{\eps\}$ koji sadrži \emph{jednu}
+riječ. Ovo je ista razlika kao u prethodnom poglavlju --- samo sad gledamo
+izraze, ne skupove.
+\end{napomena}
+
+\subsection{Operacije}
+
+Iz inicijalnih jezika gradimo veće regularnim operacijama:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{cll}
+\hline
+\textbf{Izraz} & \textbf{Jezik} & \textbf{Čitamo} \\
+\hline
+$r \cup s$  & $L(r) \cup L(s)$   & unija: ili $r$ ili $s$ \\
+$r \cdot s$ & $L(r) \cdot L(s)$  & konkatenacija: prvo $r$, pa $s$ \\
+$r^*$       & $L(r)^*$           & zvijezda: nula ili više puta $r$ \\
+$r^+$       & $L(r)^+$           & plus: jedanput ili više puta $r$ \\
+\hline
+\end{tabular}
+\end{center}
+
+Točka za konkatenaciju često se izostavlja: $rs$ znači isto što i $r \cdot s$.
+Prioritet operacija je kao u aritmetici: ${}^*$ i ${}^+$ vežu najjače, pa
+konkatenacija, pa unija. Dakle $ab^*c \cup d$ čitamo kao
+$(a \cdot (b^*) \cdot c) \cup d$.
+
+% ================================================================
+\section{Primjeri --- od jednostavnog prema složenom}
+% ================================================================
+
+Sad kad imamo definiciju, vježbamo je na konkretnim primjerima. Ključna
+vještina je dvojaka: čitati regularni izraz i razumjeti koji jezik opisuje,
+i zadani jezik opisati regularnim izrazom.
+
+\begin{primjer}[Jednostavni izrazi]
+Nad $\Sig = \{a, b\}$:
+\begin{itemize}
+  \item $a \cup b$ opisuje jezik $\{a, b\}$ --- jedna od ta dva slova.
+  \item $ab$ opisuje $\{ab\}$ --- točno ta jedna dvoznakovna riječ.
+  \item $a^*$ opisuje $\{\eps, a, aa, aaa, \ldots\}$ --- nula ili više $a$-ova.
+  \item $a^+$ opisuje $\{a, aa, aaa, \ldots\}$ --- jedan ili više $a$-ova.
+  \item $a^* b$ opisuje $\{b, ab, aab, aaab, \ldots\}$ --- nula ili više $a$-ova, pa jedan $b$.
+\end{itemize}
+\end{primjer}
+
+\begin{primjer}[Sve riječi nad $\{a, b\}$]
+Izraz $(a \cup b)^*$ opisuje \emph{sve} moguće riječi nad $\{a, b\}$,
+dakle $\Sig^*$. Kleeneva zvijezda od $\{a\} \cup \{b\} = \{a,b\}$
+daje sve načine nizanja $a$-ova i $b$-ova, bez ikakva ograničenja.
+
+To je korisna crtica: kad god trebate ,,bilo što od tih znakova'',
+pišete $(a \cup b)^*$, ili općenito $\Sig^*$.
+\end{primjer}
+
+\begin{primjer}[Binarni brojevi]
+Razmotrimo izraz $1(0 \cup 1)^* \cup 0$ nad $\Sig = \{0, 1\}$.
+\begin{itemize}
+  \item $1(0 \cup 1)^*$: počinje s $1$, a zatim slijedi bilo što ---
+        to su svi binarni brojevi $\geq 1$.
+  \item $0$: baš sama nula.
+  \item Unija: skupa dobivamo \emph{sve valjane binarne zapise prirodnih
+        brojeva} bez vodećih nula (jedino $0$ počinje s nulom).
+\end{itemize}
+Ovo je tipičan uzorak: posebnim slučajem ($0$) riješimo rub,
+a glavnom granom ($1(0\cup1)^*$) pokrijemo opći slučaj.
+\end{primjer}
+
+\begin{primjer}[Riječi koje počinju i završavaju istim slovom]
+Napišimo regularni izraz za sve riječi nad $\{a, b, c\}$ koje
+počinju i završavaju istim slovom. Koristimo kraticu $\Sig := a \cup b \cup c$.
+
+Fiksiramo koje je to slovo i ujedinimo tri slučaja:
+\begin{itemize}
+  \item Počinje i završava s $a$: treba $a \Sig^* a$, ali i samu riječ $a$.
+        Dakle: $a(\Sig^* a \cup \eps)$.
+  \item Analogno za $b$ i $c$.
+\end{itemize}
+Ukupno:
+\[
+  a(\Sig^* a \cup \eps) \;\cup\; b(\Sig^* b \cup \eps) \;\cup\; c(\Sig^* c \cup \eps).
+\]
+\end{primjer}
+
+\begin{primjer}[Neparan broj $a$-ova]
+Jezik svih riječi nad $\{a,b\}$ s neparnim brojem $a$-ova.
+
+Intuicija: između $a$-ova može biti koliko god $b$-ova. Pokušajmo
+$b^* (ab^*)^+$ --- ali to dopušta \emph{bilo koji} broj $a$-ova, parni ili neparni.
+
+Rješenje: svaki par $a$-ova se ,,poništi'', a jedan ostaje:
+\[
+  b^* \bigl(ab^* ab^*\bigr)^* ab^*.
+\]
+Čitanje: nula ili više parova $a \cdots a$ (okruženih $b$-ovima),
+pa točno jedan $a$, pa $b$-ovi. Ukupan broj $a$-ova je $2k + 1$ za neko
+$k \geq 0$ --- uvijek neparan.
+\end{primjer}
+
+\begin{kljucno}
+Izgradnja regularnog izraza za zadani jezik obično ide ovako:
+\begin{enumerate}
+  \item Identificirajte strukturu riječi --- što dolazi na kojoj poziciji.
+  \item Podijelite na slučajeve ako treba (npr.\ različiti početni znakovi).
+  \item Koristite $(a \cup b \cup \ldots)^*$ za ,,bilo što od tih znakova''.
+  \item Provjerite rubne slučajeve: prazna riječ, jednoznakovne riječi.
+\end{enumerate}
+\end{kljucno}
+
+% ================================================================
+\section{Algebarske jednakosti}
+% ================================================================
+
+Dva regularna izraza $r$ i $s$ su \textbf{ekvivalentni} ako opisuju isti
+jezik: $L(r) = L(s)$. Pišemo $r \equiv s$.
+
+Postoji niz korisnih algebarskih identiteta:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.6}
+\begin{tabular}{ll}
+\hline
+\textbf{Identitet} & \textbf{Što kaže} \\
+\hline
+$r \cup \emptyset \equiv r$ & unija s praznim jezikom ne mijenja ništa \\
+$r \cdot \eps \equiv r$     & konkatenacija s $\eps$ ne mijenja ništa \\
+$r \cdot \emptyset \equiv \emptyset$ & konkatenacija s praznim daje prazno \\
+$r \cup r \equiv r$         & unija sa samim sobom je idempotentna \\
+$r \cup s \equiv s \cup r$  & unija je komutativna \\
+$(rs)t \equiv r(st)$        & konkatenacija je asocijativna \\
+$r(s \cup t) \equiv rs \cup rt$ & distributivnost \\
+$(r^*)^* \equiv r^*$        & zvijezda od zvijezde je zvijezda \\
+$\eps^* \equiv \eps$        & zvijezda od $\eps$ je $\eps$ \\
+$\emptyset^* \equiv \eps$   & zvijezda od praznog skupa je $\{\eps\}$ \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{primjer}
+Provjerimo $\emptyset^* \equiv \eps$, tj.\ $L(\emptyset^*) = \{\eps\}$.
+Po definiciji, $\emptyset^* = \bigcup_{k \geq 0} \emptyset^k$.
+Vrijedi $\emptyset^0 = \{\eps\}$ i $\emptyset^k = \emptyset$ za $k \geq 1$.
+Dakle $\emptyset^* = \{\eps\}$. Intuitivno: jedini način da se ,,niže nula
+ili više riječi iz praznog skupa'' je uzeti nula riječi, što daje $\eps$.
+\end{primjer}
+
+\begin{zadatak}
+\begin{enumerate}[label=(\alph*), itemsep=4pt]
+  \item Pokažite da je $r^+ \equiv rr^* \equiv r^*r$.
+  \item Vrijedi li $r^* \equiv r^+ \cup \eps$ za svaki $r$?
+        Što ako je $\eps \in L(r)$?
+  \item Nad $\Sig = \{0,1\}$, napišite regularni izraz za:
+    \begin{itemize}
+      \item sve riječi koje završavaju na $01$,
+      \item sve riječi koje sadrže podniz $11$,
+      \item sve riječi parne duljine.
+    \end{itemize}
+  \item Nad $\Sig = \{a, b\}$, napišite regularni izraz za sve riječi
+        u kojima se $a$ nikad ne pojavljuje dva puta zaredom.
+\end{enumerate}
+\end{zadatak}
+
+% ================================================================
+\section{Što regularni izrazi ne mogu?}
+% ================================================================
+
+Regularni izrazi su moćni, ali nisu svemoćni.
+
+Jezik $L_= = \{a^n b^n \mid n \geq 1\}$ sadrži riječi $ab$, $aabb$,
+$aaabbb$, \ldots\ Svaka riječ ima isti broj $a$-ova i $b$-ova.
+Pokušajte napisati regularni izraz za taj jezik --- neće ići.
+
+Zašto? Regularni izraz ne može ,,prebrojati'' i usporediti duljine dva
+dijela riječi. Sve što može je pratiti konačno mnogo mogućih ,,stanja''
+--- a mogućih vrijednosti $n$ je beskonačno mnogo. Formalni dokaz dolazi
+s \textbf{lemom o pumpanju} (poglavlje~6), ali intuicija je jasna već sad.
+
+\begin{kljucno}
+Regularni izrazi opisuju jezike u kojima se struktura može pratiti bez
+pamćenja neograničenih brojača. Čim trebate ,,zapamtiti'' koliko puta
+ste nešto vidjeli i usporediti s nekim drugim brojem --- regularni izraz
+nije dovoljan alat.
+\end{kljucno}
+
+% ================================================================
+\section*{Sažetak}
+% ================================================================
+
+Regularni izrazi daju nam kompaktan način opisivanja regularnih jezika.
+Grade se od tri atomarna slučaja ($\emptyset$, $\eps$, jednoznakovni jezici)
+i tri operacije (unija, konkatenacija, Kleeneva zvijezda/plus).
+
+\medskip
+\noindent
+\begin{tabular}{ll}
+  $\emptyset$  & prazan jezik \\
+  $\eps$       & jezik $\{\eps\}$ \\
+  $\alpha$     & jezik $\{\alpha\}$ \\
+  $r \cup s$   & unija \\
+  $rs$         & konkatenacija \\
+  $r^*$        & Kleeneva zvijezda (nula ili više puta) \\
+  $r^+$        & Kleenejev plus (jedanput ili više) \\
+\end{tabular}
+
+\medskip
+\noindent U sljedećem poglavlju uvodimo \textbf{konačne automate} ---
+strojeve koji prepoznaju regularne jezike. Vidjet ćemo da su automati i
+regularni izrazi \emph{ekvivalentni}: svaki regularni izraz daje automat,
+i svaki automat daje regularni izraz.

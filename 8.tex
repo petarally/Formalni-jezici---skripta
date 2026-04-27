@@ -1,0 +1,395 @@
+% Chapter 8 — includable by main.tex
+\chapter{Turingovi strojevi i odlučivost}
+\label{chap:8}
+
+\begin{quote}
+\itshape
+Sve što računala mogu raditi, mogu i Turingovi strojevi --- i obrnuto.
+Ovo poglavlje definira taj univerzalni model izračuna, klasificira jezike
+na odlučive i neodlučive, te dokazuje temeljne rezultate neodlučivosti
+pomoću dijagonalizacije i svođenja.
+\end{quote}
+
+
+% ================================================================
+\section{Turingov stroj --- motivacija}
+% ================================================================
+
+OA je mocniji od PA, ali jos uvijek ima ogranicenje: traka ne smije
+biti dulja od ulaza. Što ako trebamo više prostora?
+
+Najjednostavnija opcija: ``otvorimo'' traku s desne strane. Umjesto
+da je traka duljine $|w|$, traka je \emph{beskonačna} prema desno,
+inicijalno popunjena posebnim znakom praznine $\sqcup$.
+
+Ovaj model zovemo \textbf{Turingov stroj} (TS), i ispostavlja se da je
+to upravo dovoljno za modeliranje svakog izračuna koji je ikada
+opisan. Ovo je sadržaj \textbf{Church-Turingove teze}: sve što je
+``algoritamski'' izračunljivo, izračunljivo je i na Turingovom stroju.
+
+TS dolazi u tri varijante s različitim svrhama:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{lll}
+\hline
+\textbf{Vrsta} & \textbf{Svrha} & \textbf{Ključno} \\
+\hline
+Prepoznavac (TP) & prepoznaje jezik & može se vrtjeti unedogled \\
+Odlučitelj (TO) & odlučuje problem & uvijek stane \\
+Nabrajac (TE) & generira jezik & nema ulaza, nabrajamo izlaz \\
+\hline
+\end{tabular}
+\end{center}
+
+% ================================================================
+\section{Turingov prepoznavac (TP)}
+% ================================================================
+
+\begin{definicija}[Turingov prepoznavac]
+\textbf{Turingov prepoznavac} nad $\Sig$ je sedmorka
+\[
+  T = (Q,\, \Sig,\, \Gamma,\, \sqcup,\, \delta,\, q_0,\, q_X),
+\]
+gdje je $\Sig \subsetneq \Gamma$ (radna abeceda je sira od ulazne),
+$\sqcup \in \Gamma \setminus \Sig$ je znak praznine, a
+\[
+  \delta : (Q \setminus \{q_X\}) \times \Gamma \to Q \times \Gamma \times \{-1, 1\}
+\]
+je \textbf{deterministicna} funkcija prijelaza.
+
+Konfiguracija je trojka $(q, n, t) \in Q \times \mathbb{N} \times \Gamma^\mathbb{N}_\sqcup$,
+gdje je $\Gamma^\mathbb{N}_\sqcup$ skup svih traka koje su od nekog mjesta
+nadalje konstanta $\sqcup$ (prebrojivo mnogo takvih).
+
+$T$ prihvaća riječ $w$ ako izračunavanje počevši od
+$(q_0, 0, w\sqcup\sqcup\cdots)$ dosegne konfiguraciju sa stanjem $q_X$.
+\end{definicija}
+
+\begin{definicija}[Rekurzivno prebrojivi jezici]
+Jezik je \textbf{rekurzivno prebrojiv} (u klasi RE) ako ga prepoznaje
+neki TP. Piše se $L \in \mathrm{RE}$.
+\end{definicija}
+
+Ključna razlika od OA: TP se \emph{ne mora zaustaviti} za riječi koje
+ne prihvaća. Može se vrtjeti unedogled. To je problem: ne znamo
+je li stroj ``razmišlja'' ili je u beskonačnoj petlji.
+
+% ================================================================
+\section{Turingov odlučitelj (TO)}
+% ================================================================
+
+\begin{definicija}[Turingov odlučitelj i rekurzivni jezici]
+\textbf{Turingov odlučitelj} (TO) je TP koji uz završno stanje $q_X$
+ima i stanje odbijanja $\overline{q_X}$, te se \textbf{uvijek} zaustavi ---
+ili u $q_X$ (prihvaćanje) ili u $\overline{q_X}$ (odbijanje).
+
+Jezik je \textbf{rekurzivan} (u klasi Rek) ako ga prepoznaje neki TO.
+\end{definicija}
+
+Svaki TO je TP (možemo ignorirati $\overline{q_X}$), pa $\mathrm{Rek} \subseteq \mathrm{RE}$.
+
+\begin{propozicija}[Postov teorem]
+$L \in \mathrm{Rek}$ ako i samo ako su i $L$ i $L^c$ u $\mathrm{RE}$.
+\end{propozicija}
+
+\textit{Dokaz.}
+$(\Rightarrow)$: ako je $L$ rekurzivan, i $L$ i $L^c$ su rekurzivni
+(Rek je zatvorena na komplement), pa a fortiori u RE.
+
+$(\Leftarrow)$: neka TP $S$ prepoznaje $L$, a TP $T$ prepoznaje $L^c$.
+Konstruiramo TO koji istovremeno simulira $S$ i $T$, korak po korak.
+Jer je svaka riječ ili u $L$ ili u $L^c$, jedan od njih će sigurno stati.
+Kad $S$ prihvati, TO prihvaća; kad $T$ prihvati, TO odbija. \qed
+
+\begin{kljucno}
+Postov teorem znači: jezik je odlučiv točno onda kad možemo i
+\emph{potvrditi} i \emph{zanijekati} članstvo algoritmom koji uvijek stane.
+Samo znati "kako naći" nije dovoljno --- treba znati i "kako ne naći".
+\end{kljucno}
+
+% ================================================================
+\section{Zatvorenost klasa Rek i RE}
+% ================================================================
+
+\begin{propozicija}
+Klasa $\mathrm{Rek}$ zatvorena je na sve skupovne i jezicne operacije.
+Klasa $\mathrm{RE}$ zatvorena je na $\cup$ i $\cap$, ali \textbf{ne} na komplement.
+\end{propozicija}
+
+Ključna tehnika za Rek: \textbf{potpuna simulacija}. Naredba
+``simuliraj rad od $T$ na sadržaju trake $t_i$'' pokreće TO na
+kopiji trake, te uvijek stane jer je $T$ odlučitelj.
+
+Primjer --- zatvorenost Rek na Kleeneovu zvijezdu:
+za riječ $w$, probamo sve moguće rastave $w = w_1 \cdots w_k$ (konačno
+mnogo) i za svaki rastav provjerimo je li svaki $w_i \in L$. Ako ikoji
+rastav uspije, prihvati; inače odbij.
+
+Za RE s unijom: moramo simulirati oba TP \emph{naizmjenično}, korak
+po korak --- ne smijemo pokrenuti prvi do kraja jer se možda nikad
+ne zaustavi. Ovo je tzv.\\ "dovetailing" tehnika.
+
+% ================================================================
+\section{Kodiranje i problemi}
+% ================================================================
+
+Da bismo mogli govoriti o TS-ovima kao ulazima TS-u, trebamo ih
+\textbf{kodirati} kao riječi. Koristimo \textbf{univerzalnu abecedu}
+$\Sig = \{., \mathrm{I}, (, )\}$ i sustavno kodiramo:
+\[
+  c(n) := \mathrm{I}^n., \quad
+  c(t_1, \ldots, t_k) := (c(t_1) \cdots c(t_k)), \quad
+  c(\{t_1, \ldots, t_k\}) := (c(t_1) \cdots c(t_k)).
+\]
+Kod stroja $T$ (ili drugog matematickog objekta) oznacavamo $\langle T \rangle$,
+a par $(T, w)$ oznacavamo $\langle T, w \rangle$.
+
+\subsection{Prirodni strojevi i problemi}
+
+\textbf{Problem} je jezik cija konkretna kodna abeceda nije bitna
+\[
+  A_\mathrm{KA} := \{\langle M, w \rangle : M \text{ je KA i } w \in L(M)\}
+\]
+je odlučiv problem (pišemo pseudokodom koji simulira KA $M$ na $w$).
+
+% ================================================================
+\section{Odlučivi i neodlučivi problemi}
+% ================================================================
+
+\subsection{Odlučivi problemi}
+
+\begin{propozicija}
+Sljedeći problemi su odlučivi:
+\begin{itemize}
+  \item $A_\mathrm{KA}$, $A_\mathrm{RI}$, $A_\mathrm{NKA}$ --- prihvaćanje za regularne jezike
+  \item $E_\mathrm{KA}$ --- praznost KA-jezika
+  \item $\mathrm{EQ}_\mathrm{KA}$ --- jednakost dva KA-jezika
+  \item $A_\mathrm{BKG}$, $A_\mathrm{BK}$ --- prihvaćanje za BK-jezike (CYK!)
+  \item $E_\mathrm{BKG}$, $E_\mathrm{BK}$ --- praznost BK-jezika
+  \item $A_\mathrm{OA}$, $A_\mathrm{Kon}$ --- prihvaćanje za kontekstne jezike
+\end{itemize}
+\end{propozicija}
+
+Svi ovi problemi imaju konkretne algoritme koje smo vec opisali
+(pseudokodom ili formalnom konstrukcijom).
+
+\subsection{Neodlučivi problemi --- hijerarhija}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{lll}
+\hline
+\textbf{Problem} & \textbf{Klasa} & \textbf{Zašto} \\
+\hline
+$A_\mathrm{TP}$, $A_\mathrm{RE}$ & $\mathrm{RE} \setminus \mathrm{Rek}$ & TP može sebe simulirati \\
+$\overline{A_\mathrm{TP}}$ & nije u RE & Postov teorem + $A_\mathrm{TP} \in \mathrm{RE} \setminus \mathrm{Rek}$ \\
+\mathrm{EQ}_\mathrm{BK} & neodlučivo & svođenja od $\overline{A_\mathrm{TP}}$ \\
+E_\mathrm{Kon} & neodlučivo & svođenja od $A_\mathrm{TP}$ \\
+\hline
+\end{tabular}
+\end{center}
+
+% ================================================================
+\section{Svođenje (redukcija)}
+% ================================================================
+
+\begin{definicija}[Svođenje]
+Kažemo da se $L$ \textbf{svodi na} $M$ ($L \leq M$) ako postoji
+totalna Turing-izračunljiva funkcija $\varphi : \Sig^* \to \Sig^*$
+takva da za svaki $w$:
+\[
+  w \in L \iff \varphi(w) \in M.
+\]
+\end{definicija}
+
+\begin{propozicija}
+Neka $L \leq M$.
+\begin{itemize}
+  \item Ako je $M$ (polu)odlučiv, tada je i $L$ (polu)odlučiv.
+  \item Ako je $L$ neodlučiv, tada je i $M$ neodlučiv.
+\end{itemize}
+\end{propozicija}
+
+Drugu točku koristimo za dokazivanje neodlučivosti:
+Pokažemo $\mathrm{POZNATO\_NEODLUCIVO} \leq \mathrm{NOVI\_PROBLEM}$,
+Čime zaključujemo da je i novi problem neodlučiv.
+
+\begin{primjer}[Svođenje za $E_\mathrm{KA}$]
+Problem jednakosti $\mathrm{EQ}_\mathrm{KA}$ svodi se na $E_\mathrm{KA}$:
+\[
+  \langle M_1, M_2 \rangle \mapsto \langle M_\Delta \rangle,
+  \quad \text{gdje } L(M_\Delta) = L(M_1) \triangle L(M_2).
+\]
+Dakle $\langle M_1, M_2 \rangle \in \mathrm{EQ}_\mathrm{KA}
+\iff \langle M_\Delta \rangle \in E_\mathrm{KA}$.
+Konstruiranje $M_\Delta$ je mehaničko (Kartezijev produkt),
+pa je $\varphi$ Turing-izračunljiva. Kako je $E_\mathrm{KA}$ odlučiv,
+slijedi da je i $\mathrm{EQ}_\mathrm{KA}$ odlučiv. \checkmark
+\end{primjer}
+
+% ================================================================
+\section{Dijagonalizacija: Russell i $A_\mathrm{TP}$}
+% ================================================================
+
+Kako dokazati da neki jezik \emph{nije} u RE? Lema o pumpanju
+ne postoji za ovu klasu. Koristimo \textbf{dijagonalizaciju} --- trik
+koji potjece od Cantora (prebrojiivost skupova) i Russella (paradoks).
+
+\begin{propozicija}
+Jezik
+\[
+  \mathrm{Russell} := \{\langle T \rangle : T \text{ je TP i } \langle T \rangle \notin L(T)\}
+\]
+nije rekurzivno prebrojiv.
+\end{propozicija}
+
+\textit{Dokaz.}
+Pretpostavimo da je Russell u RE, i neka TP $R$ prepoznaje Russell.
+Tada:
+\[
+  \langle R \rangle \in \mathrm{Russell}
+  \iff \langle R \rangle \notin L(R) = \mathrm{Russell}.
+\]
+Kontradikcija. \qed
+
+Ovo je direktan analog Russellovog paradoksa: ``skup svih skupova
+koji ne sadrze sami sebe'' vodi do kontradikcije.
+
+\begin{propozicija}
+Jezik $A_\mathrm{TP} = \{\langle T, w \rangle : T \text{ prihvaća } w\}$
+je u $\mathrm{RE} \setminus \mathrm{Rek}$.
+\end{propozicija}
+
+\textit{Skica dokaza.}
+$A_\mathrm{TP} \in \mathrm{RE}$: konstruiramo \textbf{univerzalni Turingov stroj}
+(UTS) koji simulira rad TP $T$ na ulazu $w$ (dan kao kod).
+UTS je sam po sebi TP, pa je $A_\mathrm{TP} \in \mathrm{RE}$.
+
+$A_\mathrm{TP} \notin \mathrm{Rek}$: dokazemo da $\overline{A_\mathrm{TP}}$ nije u RE.
+Koristimo Russell $\leq \overline{A_\mathrm{TP}}$: svaki kod $\langle T \rangle$
+preslikamo u $\langle T, \langle T \rangle \rangle$, i vrijedi:
+\[
+  \langle T \rangle \in \mathrm{Russell}
+  \iff \langle T \rangle \notin L(T)
+  \iff \langle T, \langle T \rangle \rangle \in \overline{A_\mathrm{TP}}.
+\]
+Dakle Russell $\leq \overline{A_\mathrm{TP}}$. Budući da Russell nije u RE,
+ni $\overline{A_\mathrm{TP}}$ nije u RE. Po Postovom teoremu,
+$A_\mathrm{TP} \notin \mathrm{Rek}$. \qed
+
+% ================================================================
+\section{Problem zaustavljanja i kompletna slika}
+% ================================================================
+
+\begin{propozicija}
+Jezik $H = \{\langle T, w \rangle : \text{izračunavanje } T \text{ na } w \text{ stane}\}$
+(``halting problem'') ekvivalentan je $A_\mathrm{TP}$ u smislu svedivosti:
+$H \leq A_\mathrm{TP}$ i $A_\mathrm{TP} \leq H$.
+\end{propozicija}
+
+Ova ekvivalencija nije iznenadujuca: TP koji smo definirali stane
+točno kada prihvate, pa "stajanje" i "prihvaćanje" su isti uvjet.
+
+\subsection{Kompletna Chomskyjeva hijerarhija}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{lllll}
+\hline
+\textbf{Klasa} & \textbf{Automat} & \textbf{Gram.} & \textbf{$A_L$} & \textbf{$E_L$} \\
+\hline
+Reg & KA & DLG & odlučiv & odlučiv \\
+BK & PA & BKG & odlučiv & odlučiv \\
+Kon & OA & KG/MG & odlučiv & neodlučiv \\
+Rek & TO & --- & odlučiv & neodlučiv \\
+RE & TP & OG & poluodlučiv & neodlučiv \\
+\hline
+\end{tabular}
+\end{center}
+
+Prave inkluzije potvrdjuju konkretni jezici:
+\begin{align*}
+  L_= &= \{a^n b^n\} \in \mathrm{BK} \setminus \mathrm{Reg} \\
+  L_\equiv &= \{a^n b^n c^n\} \in \mathrm{Kon} \setminus \mathrm{BK} \\
+  \mathrm{EQ}_\mathrm{RI_2} &\in \mathrm{Rek} \setminus \mathrm{Kon} \\
+  A_\mathrm{TP} &\in \mathrm{RE} \setminus \mathrm{Rek} \\
+  \overline{A_\mathrm{TP}} &\notin \mathrm{RE}
+\end{align*}
+
+% ================================================================
+\section{Nedeterministicki Turingov stroj (NTP)}
+% ================================================================
+
+\begin{definicija}
+NTP ima relaciju prijelaza umjesto funkcije. Prihvaća riječ
+ako \emph{postoji barem jedna} grana izračunavanja koja stane.
+\end{definicija}
+
+\begin{propozicija}
+NTP i TP su ekvivalentni: svaki NTP ima ekvivalentni TP.
+\end{propozicija}
+
+Dokaz: TP simulira NTP koristeci \textbf{tri trake}:
+\begin{enumerate}
+  \item Kopija ulaza (nepromjenjiva).
+  \item Radna traka (simulacija jedne grane).
+  \item Treća traka: kôd trenutne grane kao niz odabranih prijelaza
+        iz $\Delta^*$ (leksikografskim redoslijedom isprobavamo sve grane).
+\end{enumerate}
+TP prolazi kroz sve moguce grane BFS-om: svaka iteracija produlji
+granu za jedan korak. Čim neka grana prihvati, TP prihvaća.
+
+\begin{napomena}
+Za odlučitelje (NTO) analogna ekvivalencija vrijedi, ali je dokaz
+teži --- ne može koristiti istu trotračnu simulaciju jer ne znamo
+znači li $\overline{q_X}$ konačno odbijanje ili samo lokalni neuspjeh.
+\end{napomena}
+
+% ================================================================
+\section{Turingovi nabrajaci (TE)}
+% ================================================================
+
+\begin{definicija}[Turingov nabrajac]
+TE nema ulaza. Ima radnu traku i \textbf{izlaznu traku}, te posebno
+\textbf{izlazno stanje} $q_\leftarrow$. Rad TE je uvijek beskonačni niz
+konfiguracija. TE \textbf{izvodi} riječ $w$ ako ikad dosegne stanje
+$q_\leftarrow$ s $w$ na izlaznoj traci.
+
+$L(E) := \{w : E \text{ izvodi } w\}$.
+\end{definicija}
+
+\begin{propozicija}
+$L \in \mathrm{RE}$ ako i samo ako postoji TE koji generira $L$.
+\end{propozicija}
+
+Smjer $(\Leftarrow)$: TP koji prepoznaje $L(E)$ simulira $E$ korak po
+korak i uspoređuje izlaz s ulaznom riječi $w$. Čim se poklope,
+prihvaća.
+
+Smjer $(\Rightarrow)$: TE za $L$ (prepoznajan TP $T$) nabrajanjem:
+za svaki $n$ i svaki moguc ulaz duljine $\leq n$, simulira $T$ na tom
+ulazu točno $n$ koraka. Ako $T$ prihvati, izvede tu riječ.
+Ovim ``dovetailing'' postupkom svaka riječ iz $L$ će biti izvedena
+u konačno mnogo koraka.
+
+% ================================================================
+\section*{Sazetak}
+% ================================================================
+
+\medskip\noindent
+\begin{tabular}{ll}
+  TP & Turingov prepoznavač: stane ili prihvaća (nema garantije zaustavljanja) \\
+  TO & Turingov odlučitelj: uvijek stane, prihvaća ili odbija \\
+  RE & jezici koje prepoznaje neki TP \\
+  Rek & jezici koje prepoznaje neki TO \\
+  $A_\mathrm{TP}$ & poluodlučiv ali neodlučiv (svođenje + dijagonalizacija) \\
+  Postov teorem & $L \in \mathrm{Rek} \iff L, L^c \in \mathrm{RE}$ \\
+  Svođenje & $L \leq M$: odlučivost "prenosi se gore" \\
+\end{tabular}
+
+\medskip\noindent
+\begin{center}
+\Large\itshape
+$\mathrm{Reg} \subsetneq \mathrm{BK} \subsetneq \mathrm{Kon} \subsetneq \mathrm{Rek} \subsetneq \mathrm{RE} \subsetneq \text{svi jezici}$
+\end{center}

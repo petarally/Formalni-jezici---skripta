@@ -1,0 +1,261 @@
+% Chapter 6 — includable by main.tex
+\chapter{Leme o pumpanju}
+\label{chap:6}
+
+\begin{quote}
+\itshape
+Ta stvar zove se \textbf{svojstvo pumpanja}.
+
+Intuicija kaže "treba pamtiti neograničeno puno", ali to nije formalni dokaz.
+Leme o pumpanju daju nam precizno oružje: ako jezik nema određeno
+"periodično" svojstvo, onda ne može biti u toj klasi.
+\end{quote}
+
+\section{Lema o pumpanju za regularne jezike}
+% ================================================================
+
+\begin{propozicija}[Lema o pumpanju, Sipser 1.70]
+Neka je $L$ regularan jezik. Tada postoji broj $p \geq 1$
+(``duljina pumpanja'') takav da se svaka riječ $w \in L$ duljine
+$|w| \geq p$ može zapisati kao $w = xyz$ uz uvjete:
+\begin{enumerate}[label=(\roman*)]
+  \item $y \neq \eps$ \quad (pumpa je neprazna),
+  \item $|xy| \leq p$ \quad (pumpa je blizu početka),
+  \item $xy^i z \in L$ za sve $i \geq 0$ \quad (pumpanje cuva jezik).
+\end{enumerate}
+\end{propozicija}
+
+\textit{Dokaz.}
+Neka KA $M$ prepoznaje $L$, i neka je $p = |Q|$ broj stanja.
+Za riječ $w \in L$ s $|w| \geq p$: čitajući prvih $p$ znakova,
+automat prolazi kroz $p+1$ stanja $r_0, r_1, \ldots, r_p$.
+Po \textbf{Dirichletovom principu} (golubinjak), neka dva stanja
+su ista: $r_i = r_j$ za neke $0 \leq i < j \leq p$.
+
+Definirajmo:
+\[
+  x = w_{0:i}, \quad y = w_{i:j}, \quad z = w_{j:|w|}.
+\]
+Tada:
+\begin{itemize}
+  \item $y \neq \eps$ jer $j > i$, dakle $|y| = j - i > 0$.
+  \item $|xy| = j \leq p$.
+  \item Automat koji procita $xy^i z$: ulazi u $r_i$ nakon $x$,
+        petlja $i$ puta kroz $r_i \to \cdots \to r_j = r_i$,
+        zatim nastavlja od $r_j = r_i$ kroz $z$ i zavrsava u istom
+        zavrsnom stanju kao i za $w$. \qed
+\end{itemize}
+
+\begin{kljucno}
+Lemu koristimo \textbf{kontrapositivno}: ako za svaki $p$ možemo
+naći riječ $w \in L$ koja se ne može pumpati (za svaki rastav
+$xyz$ koji zadovoljava (i) i (ii), postoji $i$ takav da
+$xy^iz \notin L$), tada $L$ nije regularan.
+
+Dokaz je \textbf{igra}: naš protivnik odabire $p$, mi biramo $w$,
+protivnik bira rastav $xyz$, mi biramo $i$. Pobjedujemo ako dobijemo
+$xy^iz \notin L$.
+\end{kljucno}
+
+% ================================================================
+\section{Primjena: $L_=$ nije regularan}
+% ================================================================
+
+\begin{propozicija}
+Jezik $L_= = \{a^n b^n \mid n \geq 1\}$ nije regularan.
+\end{propozicija}
+
+\textit{Dokaz.}
+Pretpostavimo suprotno: neka je $L_=$ regularan s duljinom pumpanja $p$.
+
+Odaberemo riječ $w = a^p b^p \in L_=$ (duljine $2p \geq p$, dakle
+zadovoljava uvjet). Prema lemi, postoji rastav $w = xyz$ s
+$y \neq \eps$ i $|xy| \leq p$.
+
+Iz $|xy| \leq p = |a^p|$ slijedi da $x$ i $y$ leze unutar bloka $a$-ova,
+dakle $y = a^m$ za neki $m \geq 1$.
+
+Pumpajmo s $i = 0$: $xy^0z = xz = a^{p-m}b^p$. Da bi ovo bilo u $L_=$,
+trebamo jednak broj $a$-ova i $b$-ova: $p - m = p$, ali $m \geq 1$
+pa $p - m < p$. Kontradikcija: $xz \notin L_=$. \qed
+
+\begin{primjer}[Tipična strategija dokaza]
+Struktura dokaza je uvijek ista:
+\begin{enumerate}
+  \item \textbf{Pretpostavimo} da je $L$ regularan s duljinom pumpanja $p$.
+    \item \textbf{Odaberemo} konkretnu riječ $w \in L$ duljine $\geq p$
+      (tipično $w$ ovisi o $p$, npr.\ $w = a^p b^p$).
+    \item \textbf{Analiziramo} sve moguće rastave $xyz$ koji zadovoljavaju
+      uvjete (i) i (ii). Često uvjet $|xy| \leq p$ snažno ograničava
+      gdje može ležati $y$.
+  \item \textbf{Pumpamo} s nekim $i$ (tipicno $i = 0$ ili $i = 2$) i
+        pokazujemo da $xy^i z \notin L$.
+  \item \textbf{Kontradikcija}: $L$ nije regularan.
+\end{enumerate}
+\end{primjer}
+
+\begin{primjer}[$\{w \in \{a,b\}^* : |w|_a = |w|_b\}$ nije regularan]
+Neka je $L = \{w : |w|_a = |w|_b\}$. Odaberemo $w = a^p b^p$.
+Sve kao gore: $y = a^m$, pumpanje s $i = 0$ daje $a^{p-m}b^p$
+s razlicitim brojem $a$-ova i $b$-ova. \qed
+\end{primjer}
+
+\begin{primjer}[$\{0^n : n \text{ je prost}\}$ nije regularan]
+Neka je $L = \{0^n : n \text{ je prost}\}$.
+Odaberemo $w = 0^p$ gdje je $p$ prvi prost broj $\geq p$ duljine
+pumpanja (takav postoji jer ima beskonačno prostih).
+
+Rastav: $w = xyz$, $|y| = m \geq 1$, $|xy| \leq p$.
+Pumpamo s $i = |xz| + 1$: duljina od $xy^i z$ je
+$|x| + i \cdot m + |z| = |xz| + im = |xz|(1 + m) + m \cdot |xz|$\ldots
+
+Koristimo drugi trik: $|xy^i z| = |xz| + im$.
+Uzmemo $i = |xz|$, tada $|xy^iz| = |xz| + |xz| \cdot m = |xz|(1+m)$
+--- djeljivo s $|xz|$ i s $(1+m)$, dakle nije prost za $|xz| > 1$.
+\qed
+\end{primjer}
+
+\begin{zadatak}
+Dokazite da sljedeći jezici nisu regularni (koristeći lemu o pumpanju):
+\begin{enumerate}[label=(\alph*)]
+  \item $\{a^n b^{2n} \mid n \geq 0\}$
+  \item $\{w \in \{a,b\}^* : w = w^R\}$ (palindromi)
+  \item $\{1^{n^2} \mid n \geq 0\}$ (kvadrati u unarnom zapisu)
+  \item $\{a^i b^j c^k \mid i + j = k\}$
+\end{enumerate}
+\end{zadatak}
+
+% ================================================================
+\section{Lema o pumpanju za bezkontekstne jezike}
+% ================================================================
+
+Ista ideja, ali za BK-jezike i s pet dijelova umjesto tri.
+
+\begin{propozicija}[Lema o pumpanju za BK, Sipser 2.34]
+Neka je $L$ bezkontekstan jezik. Tada postoji broj $p \geq 1$
+takav da se svaka riječ $s \in L$ s $|s| \geq p$ može zapisati
+kao $s = uvxyz$ uz uvjete:
+\begin{enumerate}[label=(\roman*)]
+  \item $vy \neq \eps$ \quad (barem jedna od pumpi je neprazna),
+  \item $|vxy| \leq p$ \quad (pumpe su blizu jedna drugoj),
+  \item $uv^i x y^i z \in L$ za sve $i \geq 0$ \quad (pumpanje cuva jezik).
+\end{enumerate}
+\end{propozicija}
+
+\textit{Ideja dokaza.}
+Neka BKG $G$ (u ChNF) generira $L$, i neka je $b = \max |desna strana|`
+(za ChNF, $b = 2$). Za dovoljno dugu riječ $s$, stablo parsiranja
+mora imati duboku granu --- toliko duboku da se neka varijabla $R$
+mora ponoviti duž iste grane (po Dirichletovom principu, ako
+grana ima više od $|V|$ čvorova).
+
+Istaknemo zadnja dva pojavljivanja $R$ u toj grani:
+\[
+  S \Rightarrow^* uRz \Rightarrow^* uvRyz \Rightarrow^* uvxyz = s.
+\]
+Budući da $R \Rightarrow^* vRy$, možemo iterirati: $R \Rightarrow^* v^i R y^i$,
+a zatim zatvoriti s $R \Rightarrow^* x$. Time dobijemo $uv^i xy^i z \in L$
+za svaki $i \geq 0$.
+
+Uvjet $|vxy| \leq p$ dolazi iz toga da biramo \emph{zadnja} dva
+pojavljivanja $R$ u dubini: podstablo ispod nižeg $R$ nije predugo,
+pa riječ koju ono generira nije preduga. \qed
+
+% ================================================================
+\section{Primjena: $L_\equiv$ nije bezkontekstan}
+% ================================================================
+
+\begin{propozicija}
+Jezik $L_\equiv = \{a^n b^n c^n \mid n \geq 1\}$ nije bezkontekstan.
+\end{propozicija}
+
+\textit{Dokaz.}
+Pretpostavimo suprotno: neka je $p$ duljina pumpanja za $L_\equiv$.
+
+Odaberemo $s = a^p b^p c^p$ (duljine $3p \geq p$). Prema lemi,
+postoji rastav $s = uvxyz$ s $vy \neq \eps$ i $|vxy| \leq p$.
+
+Ključna opservacija: $|vxy| \leq p$, a $a$-ovi i $c$-ovi su udaljeni
+$2p > p$ znakova. Dakle $vxy$ ne može sadržavati i $a$-ove i $c$-ove
+istovremeno.
+
+\textbf{Slučaj 1}: $vxy$ ne sadrzi $c$-ove.
+Tada je svih $p$ slova $c$ u dijelu $z$. Pumpamo s $i = 2$:
+riječ $uv^2xy^2z$ ima više $a$-ova ili $b$-ova (jer smo pumpali $v$
+ili $y$ koji sadrže $a$-ove ili $b$-ove), ali i dalje $p$ slova $c$.
+Dakle $uv^2xy^2z \notin L_\equiv$.
+
+\textbf{Slučaj 2}: $vxy$ ne sadrzi $a$-ove (analogno, ili BNSO).
+Svih $p$ slova $a$ je u $u$. Pumpamo s $i = 0$:
+$uxz$ ima $p$ slova $a$, ali manje od $p$ slova $b$ ili $c$
+(jer $vy \neq \eps$ pa smo nešto uklonili). Dakle $uxz \notin L_\equiv$. \qed
+
+\begin{primjer}[Nezatvorenost BK na presjek]
+Definiramo:
+\begin{align*}
+  L_{a=b} &= \{a^n b^n c^k : n, k \geq 1\} = L_= \cdot c^+, \\
+  L_{b=c} &= \{a^k b^n c^n : n, k \geq 1\} = a^+ \cdot L_=.
+\end{align*}
+Oba su bezkontekstna (konkatenacija BK i regularnog).
+Ali $L_{a=b} \cap L_{b=c} = L_\equiv$ --- a upravo smo dokazali da
+$L_\equiv$ nije bezkontekstan!
+
+Zaključak: \textbf{BK nije zatvorena na presjek}. Iz de Morgana slijedi
+ni na komplement.
+\end{primjer}
+
+\begin{zadatak}
+Dokazite da sljedeći jezici nisu bezkontekstni:
+\begin{enumerate}[label=(\alph*)]
+  \item $\{a^n b^n c^n d^n \mid n \geq 1\}$
+  \item $\{ww \mid w \in \{a,b\}^*\}$ (kvadrati)
+  \item $\{a^i b^j c^k \mid i < j < k\}$
+  \item $\{1^{n^2} \mid n \geq 0\}$ (je li ovo BK?)
+\end{enumerate}
+\end{zadatak}
+
+% ================================================================
+\section{Usporedba dviju lema}
+% ================================================================
+
+\begin{center}
+\renewcommand{\arraystretch}{1.6}
+\begin{tabular}{lll}
+\hline
+& \textbf{Reg (lema za Reg)} & \textbf{BK (lema za BK)} \\
+\hline
+Rastav & $xyz$ (3 dijela) & $uvxyz$ (5 dijelova) \\
+Pumpe & $y$ (jedna pumpa) & $v$ i $y$ (dvije pumpe) \\
+Uvjet nepraznosti & $y \neq \eps$ & $vy \neq \eps$ \\
+Uvjet lokalizacije & $|xy| \leq p$ & $|vxy| \leq p$ \\
+Pumpanje & $xy^iz \in L$ & $uv^ixy^iz \in L$ \\
+Ključni alat dokaza & Dirichlet na stanjima KA & Dirichlet na varijablama u stablu \\
+\hline
+\end{tabular}
+\end{center}
+
+Obje leme imaju isti oblik dokaza neregularnosti/nebezkontekstnosti:
+pretpostavi, odaberi rijec, analiziraj rastav, pumpa, kontradikcija.
+
+\begin{kljucno}
+Leme o pumpanju su \textbf{nuzni} uvjeti za regularnost/bezkontekstnost,
+ali ne i \textbf{dovoljni}! Postoje jezici koji zadovoljavaju lemu o
+pumpanju za Reg, a nisu regularni. Lema se koristi samo za dokazivanje
+\emph{neregularnosti} --- ne može dokazati regularnost.
+\end{kljucno}
+
+% ================================================================
+\section*{Sazetak}
+% ================================================================
+
+\medskip\noindent
+\begin{tabular}{ll}
+  Lema za Reg & $w = xyz$, $y \neq \eps$, $|xy| \leq p$, $xy^iz \in L$ \\
+  Lema za BK  & $s = uvxyz$, $vy \neq \eps$, $|vxy| \leq p$, $uv^ixy^iz \in L$ \\
+  Strategija & pretpostavi $\to$ odaberi riječ $\to$ analiziraj $\to$ pumpa $\to$ kontradikcija \\
+\end{tabular}
+
+\medskip\noindent
+U sljedećem poglavlju prelazimo na kontekstne jezike i ograničene
+automate --- prvu klasu za kojom trebamo ``pravu'' traku.
+

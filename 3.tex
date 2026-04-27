@@ -1,0 +1,349 @@
+% Chapter 3 — includable by main.tex
+\chapter{Konačni automati}
+\label{chap:3}
+
+\begin{quote}
+\itshape
+Regularni izrazi opisuju što jezik sadrži --- ali kako provjeriti
+pripada li konkretna riječ nekom jeziku? Za to trebamo stroj.
+Konačni automat je najjednostavniji takav stroj: čita riječ znak po
+znak i na kraju odlučuje da ili ne, bez ikakve memorije osim
+trenutnog stanja. Ovaj jednostavni model ispostavlja se jednako
+moćnim kao i regularni izrazi.
+\end{quote}
+
+
+% ================================================================
+\section{Ideja: stroj koji čita riječ}
+% ================================================================
+
+Zamislite jednostavan sustav za provjeru PIN-a bankomata. On prima
+niz znamenki i na kraju kaže: točno ili pogrešno. U svakom trenutku
+pamti samo ``koliko smo znakova dosad prihvatili'' --- nema nikakve
+druge memorije. Takav sustav je, u biti, konačni automat.
+
+Formalno, konačni automat je idealizirani matematički stroj koji:
+\begin{itemize}
+  \item ima konačno mnogo \textbf{stanja} (kao moguće ``faze'' rada),
+  \item kreće iz fiksnog \textbf{početnog stanja},
+  \item za svaki pročitani znak prelazi u novo stanje prema
+        \textbf{funkciji prijelaza},
+    \item na kraju prihvaća riječ ako je završio u nekom od
+      \textbf{završnih stanja}.
+\end{itemize}
+
+Kljucno ogranicenje: nema stoga, nema trake, nema ekstre memorije.
+Jedino sto stroj ``zna'' jest u kojem je stanju --- i to je sve.
+
+% ================================================================
+\section{Deterministički konačni automat (KA)}
+% ================================================================
+
+\begin{definicija}[Konačni automat]
+\textbf{Konačni automat} (KA) nad abecedom $\Sig$ je uređena petorka
+\[
+  M = (Q,\, \Sig,\, \delta,\, q_0,\, F),
+\]
+gdje je:
+\begin{itemize}
+  \item $Q$ --- konačni skup \textbf{stanja},
+  \item $\Sig$ --- abeceda (konačni skup ulaznih znakova),
+  \item $\delta : Q \times \Sig \to Q$ --- \textbf{funkcija prijelaza},
+  \item $q_0 \in Q$ --- \textbf{početno stanje},
+  \item $F \subseteq Q$ --- skup \textbf{završnih stanja}.
+\end{itemize}
+\end{definicija}
+
+Funkcija prijelaza $\delta$ je srce automata: za svako stanje i svaki
+ulazni znak precizno govori u koje stanje automat prelazi. Nema
+nedefiniranih prijelaza, nema izbora --- za svaki par $(q, \alpha)$
+postoji točno jedan nasljednik $\delta(q, \alpha)$.
+
+\begin{definicija}[Prihvaćanje riječi]
+KA $M = (Q, \Sig, \delta, q_0, F)$ \textbf{prihvaća} riječ
+$w = \alpha_1 \alpha_2 \cdots \alpha_n \in \Sig^*$ ako postoji niz stanja
+$r_0, r_1, \ldots, r_n \in Q$ takav da:
+\begin{itemize}
+  \item $r_0 = q_0$ (kreće iz početnog stanja),
+  \item $\delta(r_{i-1}, \alpha_i) = r_i$ za sve $1 \leq i \leq n$ (prati prijelaze),
+  \item $r_n \in F$ (završava u završnom stanju).
+\end{itemize}
+Jezik koji $M$ prepoznaje je
+\[
+  L(M) := \{w \in \Sig^* : M \text{ prihvaća } w\}.
+\]
+\end{definicija}
+
+\begin{napomena}
+Za deterministički KA, niz stanja $r_0, r_1, \ldots, r_n$ je
+\emph{jedinstven} za zadane $M$ i $w$ --- nema izbora ni slučajnosti.
+Automat uvijek "zna" što radi.
+\end{napomena}
+
+\begin{primjer}[KA koji prihvaća riječi s parnim brojem $a$-ova]
+Nad $\Sig = \{a, b\}$, konstruirajmo KA za jezik svih riječi s
+parnim brojem pojavljivanja slova $a$ (uključujući $0$).
+
+Trebamo pratiti samo parnost broja $a$-ova --- dvije mogucnosti:
+``parno'' i ``neparno''. To su nase dvije stanice:
+\[
+  Q = \{q_{\text{par}},\, q_{\text{nepar}}\},
+  \quad q_0 = q_{\text{par}},
+  \quad F = \{q_{\text{par}}\}.
+\]
+Funkcija prijelaza:
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{c|cc}
+  & $a$ & $b$ \\ \hline
+  $q_{\text{par}}$   & $q_{\text{nepar}}$ & $q_{\text{par}}$ \\
+  $q_{\text{nepar}}$ & $q_{\text{par}}$   & $q_{\text{nepar}}$ \\
+\end{tabular}
+\end{center}
+Riječ $aabba$: $q_{\text{par}} \xrightarrow{a} q_{\text{nepar}}
+\xrightarrow{a} q_{\text{par}} \xrightarrow{b} q_{\text{par}}
+\xrightarrow{b} q_{\text{par}} \xrightarrow{a} q_{\text{nepar}}$.
+Završava u $q_{\text{nepar}} \notin F$ --- riječ nije prihvaćena (ima $3$ slova $a$). \checkmark
+\end{primjer}
+
+\begin{primjer}[KA koji prihvaća riječi koje završavaju na $ab$]
+Nad $\Sig = \{a, b\}$, želimo prepoznati sve riječi koje završavaju
+nizom $ab$. Automat mora pamtiti ``suffix koji smo dosad vidjeli'',
+ali samo onoliko koliko je potrebno:
+\[
+  Q = \{q_0,\, q_a,\, q_{ab}\}, \quad F = \{q_{ab}\}.
+\]
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{c|cc}
+  & $a$ & $b$ \\ \hline
+  $q_0$  & $q_a$  & $q_0$ \\
+  $q_a$  & $q_a$  & $q_{ab}$ \\
+  $q_{ab}$ & $q_a$ & $q_0$ \\
+\end{tabular}
+\end{center}
+Stanje $q_a$ znači: ``zadnji pročitani znak je bio $a$''. Stanje $q_{ab}$:
+``zadnja dva znaka su bila $ab$''. Iz $q_{ab}$, ako pročitamo $a$, idemo
+u $q_a$ (novi potencijalni početak); ako pročitamo $b$, gubimo trag
+i vraćamo se u $q_0$.
+\end{primjer}
+
+% ================================================================
+\section{Nedeterministički konačni automat (NKA)}
+% ================================================================
+
+Deterministički KA je konceptualno jasan, ali često nespretan za
+dizajnirati. Prirodniji pristup je često \emph{nedeterminističan}:
+u svakom trenutku automat smije ``pogoditi'' koji će prijelaz napraviti,
+a prihvaća riječ ako \emph{postoji barem jedna grana} koja vodi u
+završno stanje.
+
+\begin{definicija}[Nedeterministički KA]
+\textbf{Nedeterministički konačni automat} (NKA) nad $\Sig$ je
+uređena petorka $(Q, \Sig, \Delta, q_0, F)$, gdje je sve kao kod KA
+osim sto je funkcija prijelaza zamijenjena \textbf{relacijom prijelaza}:
+\[
+  \Delta \subseteq Q \times \Sig_\eps \times Q,
+\]
+gdje je $\Sig_\eps := \Sig \cup \{\eps\}$. Prijelaz $(q, \alpha, p) \in \Delta$
+znači: ``iz stanja $q$, čitajući znak $\alpha$ (ili, ako je $\alpha = \eps$,
+bez čitanja), može se preći u stanje $p$''.
+
+NKA prihvaća riječ $w$ ako postoji \emph{barem jedan} način čitanja
+$w$ koji vodi iz $q_0$ u neko završno stanje.
+\end{definicija}
+
+\begin{kljucno}
+Nedeterminizam je matematički trik: NKA ``pogađa'' točnu granu.
+U stvarnosti takav stroj ne postoji --- ali matematički je koristan
+jer je često mnogo lakši za dizajnirati od ekvivalentnog KA.
+Ključni rezultat: svaki NKA ima ekvivalentni KA!
+\end{kljucno}
+
+\subsection{Epsilon-prijelazi}
+
+Posebno su korisni \textbf{$\eps$-prijelazi}: automat prelazi iz jednog
+stanja u drugo \emph{bez čitanja ijednog znaka}. Ovo se čini kao
+varanje, ali zapravo samo kaže: ``automat smije besplatno proći kroz
+neka stanja''.
+
+\begin{definicija}[$\eps$-ljuska]
+Za skup stanja $S \subseteq Q$, \textbf{$\eps$-ljuska} od $S$ je skup
+svih stanja dostupnih iz $S$ iskljucivo $\eps$-prijelazima:
+\[
+  [S]_\eps := \{q' \in Q : \text{postoji staza } \eps\text{-prijelaza od nekog } q \in S \text{ do } q'\}.
+\]
+\end{definicija}
+
+\begin{primjer}[$\eps$-prijelazi u praksi]
+Kad želimo spojiti dva NKA $N_1$ i $N_2$ tako da prepoznaju
+konkatenaciju $L(N_1) L(N_2)$, to radimo tako da iz svakog završnog
+stanja od $N_1$ dodamo $\eps$-prijelaz prema početnom stanju od $N_2$.
+Niti jedan znak se ne ``gubi'' --- samo automati postaju lijepo spojeni.
+\end{primjer}
+
+% ================================================================
+\section{Ekvivalentnost KA i NKA}
+% ================================================================
+
+\begin{propozicija}[Sipser, teorem 1.39]
+Jezik je KA-regularan ako i samo ako je NKA-regularan.
+\end{propozicija}
+
+Smjer $(\Rightarrow)$ je trivijalan: svaki KA je specijalan slucaj NKA
+(bez nedeterminizma i $\eps$-prijelaza). Smjer $(\Leftarrow)$ je
+zanimljiviji i koristi \textbf{partitivnu konstrukciju}.
+
+\subsection{Partitivna konstrukcija}
+
+Ideja: ako NKA u svakom trenutku može biti u više stanja odjednom,
+zasto ne bismo cijeli skup mogućih stanja proglasili jednim stanjem
+novog, determinističkog automata?
+
+\begin{definicija}[Partitivna konstrukcija]
+Neka je $N = (Q, \Sig, \Delta, q_0, F)$ NKA. Definiramo KA
+\[
+  P(N) = \bigl(\mathcal{P}(Q),\; \Sig,\; \delta,\; [\{q_0\}]_\eps,\;
+  \{T \subseteq Q : T \cap F \neq \emptyset\}\bigr),
+\]
+gdje je
+\[
+  \delta(T, \alpha) := \bigl[\{q \in Q : (\exists p \in T)\; (p, \alpha, q) \in \Delta\}\bigr]_\eps.
+\]
+\end{definicija}
+
+Intuicija: stanje $P(N)$-a je skup stanja u kojima $N$ \emph{može}
+biti. Kad pročitamo znak $\alpha$, uzimamo sve $\Delta$-nasljednike
+svakog stanja iz skupa, a zatim zatvorimo na $\eps$-prijelaze.
+
+\begin{napomena}
+Ako $N$ ima $n$ stanja, $P(N)$ ima $2^n$ stanja --- eksponencijalan
+rast! U praksi se većinom koriste samo dostupna stanja (ona do kojih
+se uopće može doći iz početnog), kojih je obično znatno manje.
+\end{napomena}
+
+\begin{primjer}[Partitivna konstrukcija]
+Neka je $N$ NKA s $Q = \{1, 2, 3\}$, $q_0 = 1$, $F = \{3\}$ i
+prijelazima:
+\[
+  \Delta = \{(1,a,1),\; (1,a,2),\; (2,b,3),\; (3,b,3)\}.
+\]
+Ovaj NKA prepoznaje rijeci oblika $a^n b^k$ za $n \geq 1$, $k \geq 1$
+(nejasno, ali pogledajmo partitivnu konstrukciju):
+
+Početno stanje $P(N)$-a je $\{1\}$. Pratimo:
+\begin{itemize}
+  \item $\delta(\{1\}, a) = \{1, 2\}$ (jer $(1,a,1)$ i $(1,a,2)$)
+  \item $\delta(\{1,2\}, a) = \{1, 2\}$ (iz 1 kao gore, iz 2 nema)
+  \item $\delta(\{1,2\}, b) = \{3\}$ (samo $(2,b,3)$)
+  \item $\delta(\{3\}, b) = \{3\}$ i $\delta(\{3\}, a) = \emptyset$
+\end{itemize}
+Dostupna stanja: $\{1\}$, $\{1,2\}$, $\{3\}$, $\emptyset$ ---
+samo $4$ stanja umjesto $2^3 = 8$.
+\end{primjer}
+
+% ================================================================
+\section{Zatvorenost na skupovne i jezicne operacije}
+% ================================================================
+
+Jedna od ključnih osobina regularnih jezika jest da su zatvoreni na
+mnoge prirodne operacije.
+
+\subsection{Skupovne operacije}
+
+\begin{propozicija}
+Klasa KA-regularnih jezika zatvorena je na \textbf{uniju}, \textbf{presjek}
+i \textbf{komplement}.
+\end{propozicija}
+
+Dokaz za uniju i presjek koristi \textbf{Kartezijevu konstrukciju}:
+ako $M_1$ prepoznaje $L_1$ i $M_2$ prepoznaje $L_2$, konstruiramo
+KA koji ``istovremeno'' simulira oba:
+\[
+  M_1 \times M_2 := (Q_1 \times Q_2,\; \Sig,\; \delta,\; (q_1, q_2),\; F),
+\]
+gdje $\delta((q,q'), \alpha) := (\delta_1(q,\alpha), \delta_2(q',\alpha))$.
+
+Za \textbf{uniju} stavimo $F = Q_1 \times F_2 \cup F_1 \times Q_2$.
+Za \textbf{presjek} stavimo $F = F_1 \times F_2$.
+Za \textbf{komplement} samo zamijenimo završna s nezavršnima: $F' = Q \setminus F$.
+
+\subsection{Jezicne operacije}
+
+\begin{propozicija}
+Klasa NKA-regularnih (= regularnih) jezika zatvorena je na
+\textbf{konkatenaciju}, \textbf{Kleenevu zvijezdu} i \textbf{Kleenejev plus}.
+\end{propozicija}
+
+Ove konstrukcije su elegantnije s NKA:
+\begin{itemize}
+    \item \textbf{Unija $L \cup L'$}: dodamo novo početno stanje s
+      $\eps$-prijelazima prema početnim stanjima oba automata.
+    \item \textbf{Konkatenacija $LL'$}: iz svakog završnog stanja
+      od $N$ dodamo $\eps$-prijelaz prema početnom stanju od $N'$.
+      Stara završna stanja od $N$ više nisu završna.
+    \item \textbf{Kleeneva zvijezda $L^*$}: dodamo novo početno završno
+      stanje s $\eps$-prijelazima prema starim početnim stanjima,
+      te iz svakog završnog stanja $\eps$-prijelaz natrag prema
+      početnom stanju.
+\end{itemize}
+
+% ================================================================
+\section{Kako dizajnirati KA: heuristike}
+% ================================================================
+
+Dizajn KA je vjestina koja se uci vjezbanjem. Nekoliko heuristika:
+
+\begin{kljucno}
+\textbf{Pitajte se: sto KA mora pamtiti?}
+
+Stanja KA su različite ``situacije'' u kojima se automat može naći.
+Pitanje je: koje informacije o dosad pročitanom prefiksu su relevantne
+za odluku o prihvaćanju?
+
+Primjeri:
+\begin{itemize}
+  \item ``Zadnji pročitani znak'' --- $|\Sig|$ stanja.
+  \item ``Parnost broja $a$-ova'' --- 2 stanja.
+  \item ``Ostatak duljine modulo $k$'' --- $k$ stanja.
+  \item ``Prefiks duljine do $k$'' --- konačno mnogo stanja.
+\end{itemize}
+Ako trebate pamtiti nešto \emph{neograničeno} (npr.\ točni broj $a$-ova)
+--- KA za to ne postoji.
+\end{kljucno}
+
+\begin{zadatak}
+\begin{enumerate}[label=(\alph*), itemsep=4pt]
+  \item Konstruirajte KA nad $\{a,b\}$ koji prepoznaje jezik svih rijeci
+        cija duljina je djeljiva s $3$.
+  \item Konstruirajte NKA koji prepoznaje jezik svih rijeci nad $\{0,1\}$
+        koje završavaju s $010$.
+  \item Primijenite partitivnu konstrukciju na NKA iz (b) da dobijete
+        ekvivalentni KA.
+  \item Konstruirajte KA koji prepoznaje komplement jezika iz (a).
+\end{enumerate}
+\end{zadatak}
+
+% ================================================================
+\section*{Sazetak}
+% ================================================================
+
+Konačni automat čita riječ znak po znak, ne može se vraćati unatrag,
+i pamti samo stanje u kojemu je. Usprkos ovim jakim ograničenjima,
+konačni automati prepoznaju točno regularnu klasu jezika.
+
+\medskip
+\noindent
+\begin{tabular}{ll}
+  $M = (Q, \Sig, \delta, q_0, F)$ & deterministički KA \\
+  $N = (Q, \Sig, \Delta, q_0, F)$ & nedeterministički NKA \\
+  $[S]_\eps$ & $\eps$-ljuska skupa stanja \\
+  $P(N)$ & partitivna konstrukcija (NKA $\to$ KA) \\
+  $M_1 \times M_2$ & Kartezijeva konstrukcija (unija/presjek) \\
+\end{tabular}
+
+\medskip
+\noindent U sljedećem poglavlju zatvaramo krug: pokazujemo da su
+KA, NKA, regularni izrazi i linearne gramatike sve \emph{isti} formalizam,
+samo u različitom ruhu.
+

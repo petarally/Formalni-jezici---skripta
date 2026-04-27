@@ -1,0 +1,440 @@
+% Chapter 5 — includable by main.tex
+\chapter{Bezkontekstni jezici}
+\label{chap:5}
+
+\begin{quote}
+\itshape
+Regularni jezici ne mogu prebrojati. Čim je potrebno "zapamtiti"
+proizvoljan broj i usporediti ga s necim drugim, regularnost otkazuje.
+Bezkontekstni jezici rješavaju upravo taj problem --- dodavanjem stoga.
+Ovo poglavlje uvodi bezkontekstne gramatike, potisne automate,
+dokazuje njihovu ekvivalentnost, i opisuje ključni algoritam CYK.
+\end{quote}
+
+
+% ================================================================
+\section{Motivacija i definicija BKG}
+% ================================================================
+
+Prisjetimo se: jezik $L_= = \{a^n b^n \mid n \geq 1\}$ nije regularan
+jer KA ne može istovremeno pratiti broj $a$-ova i usporedivati ga s
+brojem $b$-ova --- konačno mnogo stanja nije dovoljno.
+
+No postoji gramatika koja ga generira:
+\[
+  S \to aSb \mid ab.
+\]
+Lako se vidi indukcijom da ova gramatika generira točno $a^n b^n$:
+pravilo $S \to aSb$ dodaje po jedan $a$ s lijeva i jedan $b$ s desna,
+a $S \to ab$ zatvara rekurziju.
+
+Ova gramatika je \textbf{bezkontekstna}: svako pravilo zamjenjuje
+jednu varijablu nizom simbola, bez obzira na kontekst oko nje.
+
+\begin{definicija}[Bezkontekstna gramatika]
+\textbf{Bezkontekstna gramatika} (BKG) je gramatika $G = (V, \Sig, \to, S)$
+u kojoj je svako pravilo oblika
+\[
+  A \to w, \qquad A \in V,\; w \in (\Sig \cup V)^*.
+\]
+Dakle, lijeva strana je uvijek točno jedna varijabla. Jezik koji
+$G$ generira je $L(G) = \{w \in \Sig^* : S \Rightarrow^* w\}$.
+Jezik je \textbf{bezkontekstan} (BK) ako ga generira neka BKG.
+\end{definicija}
+
+\begin{napomena}
+Svaka DLG je BKG (pravila $A \to \alpha B$ i $A \to \eps$ očito
+su bezkontekstna). Dakle, $\mathrm{Reg} \subseteq \mathrm{BK}$.
+Jezik $L_=$ pokazuje da je inkluzija prava: $\mathrm{Reg} \subsetneq \mathrm{BK}$.
+\end{napomena}
+
+\begin{primjer}[Aritmeticki izrazi]
+BKG za jednostavne aritmeticke izraze nad varijablom $x$ i brojevima:
+\begin{align*}
+  E &\to E + T \mid T \\
+  T &\to T * F \mid F \\
+  F &\to (E) \mid x \mid 0 \mid 1 \mid \ldots
+\end{align*}
+Ova gramatika odrazava prioritet operatora: mnozenje ($T$) ima visi
+prioritet od zbrajanja ($E$), a zagrade ($F$) imaju najvisi.
+Iz $E$ možemo izvesti npr.\ $x + x * x$, i stablo parsiranja
+automatski reflektira ispravnu strukturu $(x + (x * x))$.
+\end{primjer}
+
+\begin{primjer}[Zadatak sa slajdova]
+Koji jezik generira gramatika:
+\[
+  S \to 0J \mid 1N \mid \eps, \quad J \to 1S \mid SJ, \quad N \to 0S \mid SN\,?
+\]
+(Svaki put kad iz $S$ odemo u $0J$, sljedeći znak mora biti $1$)
+(jer $J \to 1S$), sto znaci svaki $0$ ima par $1$ iza sebe.
+Slicno, svaki $1$ ima par $0$ iza sebe. Ovo generira jezik svih
+binarnih rijeci s jednakim brojem $0$-ova i $1$-ova --- i taj je
+jezik bezkontekstan, ali nije regularan.
+\end{primjer}
+
+% ================================================================
+\section{Zatvorenost klase BK}
+% ================================================================
+
+\begin{propozicija}
+Klasa $\mathrm{BK}$ zatvorena je na uniju, konkatenaciju i Kleeneve operacije.
+\end{propozicija}
+
+\textit{Dokaz (skica).}
+Za BKG $G_1$ i $G_2$ s disjunktnim skupovima varijabli koje generiraju
+$L_1$ i $L_2$:
+\begin{itemize}
+    \item \textbf{Unija}: dodamo novu početnu varijablu $S$ i pravilo
+      $S \to S_1 \mid S_2$.
+  \item \textbf{Konkatenacija}: dodamo $S$ i pravilo $S \to S_1 S_2$.
+  \item \textbf{Zvijezda}: dodamo $S$ i pravilo $S \to S_1 S \mid \eps$.
+\end{itemize}
+
+\begin{kljucno}
+Za razliku od regularnih jezika, klasa BK \textbf{nije} zatvorena na presjek
+ni na komplement. Ovo je bitna razlika: $\mathrm{Reg}$ je zatvorena na sve
+skupovne operacije, a $\mathrm{BK}$ nije. Dokaz dolazi u poglavlju 6
+(lema o pumpanju za BK).
+
+Ipak vrijedi \textbf{konusno svojstvo}: presjek bezkontekstnog i
+regularnog jezika je bezkontekstan.
+\end{kljucno}
+
+% ================================================================
+\section{Potisni automati (PA)}
+% ================================================================
+
+KA je premoczan za regularne, a premoczan --- ne, preslabacak ---
+za bezkontekstne jezike. Treba mu memorija. Najjednostavniji dodataak:
+\textbf{stog} (stack, magacin).
+
+\begin{definicija}[Potisni automat]
+\textbf{Potisni automat} (PA) je uredena sestorka
+\[
+  M = (Q,\, \Sig,\, \Gamma,\, \Delta,\, q_0,\, F),
+\]
+gdje su $Q$, $\Sig$, $q_0$, $F$ kao kod NKA, a novo je:
+\begin{itemize}
+  \item $\Gamma$ --- \textbf{abeceda stoga} (može se razlikovati od $\Sig$),
+  \item $\Delta \subseteq Q \times \Sig_\eps \times \Gamma_\eps \times Q \times \Gamma_\eps$
+        --- relacija prijelaza.
+\end{itemize}
+Prijelaz $(q, \alpha, t, p, s) \in \Delta$ znači: ``u stanju $q$, čitajući
+$\alpha$ (ili $\eps$), s $t$ na vrhu stoga (ili $\eps$ ako stog ne gledamo),
+pređi u stanje $p$ i zamijeni $t$ s $s$ na stogu.''
+\end{definicija}
+
+Prijelaz može kombinirati različite akcije:
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{lll}
+\hline
+$t$ & $s$ & Sto se dogada \\
+\hline
+$\eps$ & $\gamma$ & \textbf{push}: stavi $\gamma$ na stog \\
+$\gamma$ & $\eps$ & \textbf{pop}: skini $\gamma$ sa stoga \\
+$\gamma$ & $\gamma$ & provjeri vrh stoga (ostavi nepromijenjenim) \\
+$\eps$ & $\eps$ & ignoriraj stog \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{napomena}
+Za PA je \textbf{nedeterminizam ključan}. Deterministički PA prepoznaju
+uzu klasu od svih BK-jezika (postoje BK-jezici koje deterministički
+PA ne može prepoznati). Ovo je bitna razlika od KA, gdje
+determinizam i nedeterminizam daju istu klasu.
+\end{napomena}
+
+\subsection{Jednostavni PA (JPA)}
+
+Radi lakse teorije, definiramo \textbf{jednostavni PA} (JPA) koji ima
+tri dodatna svojstva:
+\begin{enumerate}
+  \item Ima točno jedno završno stanje $q_X$.
+  \item Kad dosegne $q_X$, stog mu je prazan.
+  \item Svaki prijelaz je isključivo \emph{push} ili \emph{pop} (ne oboje).
+\end{enumerate}
+
+Svaki PA može se pretvoriti u ekvivalentni JPA: uvedemo novi simbol
+$\$$ na dno stoga, sva bivsa zavrsna stanja isprazne stog i odu u $q_X$,
+a svaki ``kombinirani'' prijelaz rastavimo na dva.
+
+\begin{primjer}[PA za $L_=$]
+Konstruirajmo PA koji prepoznaje $L_= = \{a^n b^n \mid n \geq 1\}$.
+
+Ideja: stavljamo $a$-ove na stog dok citamo $a$-ove, pa skidamo
+po jedan za svaki $b$ koji procitamo.
+
+\begin{itemize}
+  \item Stanja: $\{q_0, q_1, q_\text{acc}\}$, početno $q_0$, završno $\{q_\text{acc}\}$. 
+  \item Na početku push $\$$ (marker dna stoga).
+  \item U $q_0$: za svaki $a$, push $a$ (ostani u $q_0$).
+  \item Prijelaz u $q_1$: $\eps$-prijelaz (početak $b$-ova).
+  \item U $q_1$: za svaki $b$, pop $a$.
+  \item Kad je na vrhu stoga $\$$, prijelaz u $q_\text{acc}$.
+\end{itemize}
+\end{primjer}
+
+% ================================================================
+\section{Ekvivalentnost BKG i PA}
+% ================================================================
+
+\begin{propozicija}[Sipser, lema 2.21 i teorem 2.20]
+Jezik je bezkontekstan ako i samo ako ga prepoznaje neki PA.
+\end{propozicija}
+
+\subsection{BKG $\to$ PA}
+
+Konstruiramo PA koji ``pogada'' izvod riječi iz BKG:
+
+\begin{enumerate}
+  \item Push $\$$ i početnu varijablu $S$ na stog.
+  \item Ponavljaj:
+    \begin{itemize}
+      \item Ako je na vrhu stoga varijabla $A$: nedeterministički
+        odaberi pravilo $A \to w$ i zamijeni $A$ sa simbolima od $w$
+        (u obrnutom redoslijedu, da prvi simbol bude na vrhu).
+      \item Ako je na vrhu stoga znak $\alpha \in \Sig$: pročitaj
+        sljedeći ulazni znak; ako se slaže, pop; inače odbaci granu.
+      \item Ako je na vrhu stoga $\$$: prihvati.
+    \end{itemize}
+\end{enumerate}
+
+Ključna napomena: ovaj PA koristi nedeterminizam da ``pogodi'' točni
+lijevi izvod. PA prolazi točno kroz konfiguracije koje odgovaraju
+koracima lijevog izvoda.
+
+\subsection{PA $\to$ BKG}
+
+Ovaj smjer je tehnički zahtjevniji. Svaki PA pretvorimo u JPA,
+a zatim za svaki par stanja $(p, q)$ uvedemo varijablu ${}_{p}V_q`
+sa značenjem: ``JPA iz stanja $p$ s praznim stogom može pročitati
+neku riječ i doći u stanje $q$ s praznim stogom''.
+
+Pravila gramatike odrazavaju dva slucaja:
+\begin{itemize}
+    \item \textbf{Stog postane prazan u međuvremenu}: postoji stanje $r$
+      gdje stog postane prazan, pa se izvod ``lomi'' na dva dijela:
+        \[ {}_{p}V_q \to {}_{p}V_r \; {}_{r}V_q. \]
+  \item \textbf{Stog nikad nije prazan}: isti simbol $\gamma$ koji
+        je pocetak push na kraju pop-a. Ako je push na pocetku
+        $(p, \alpha, \eps, r, \gamma)$ i pop na kraju $(s, \beta, \gamma, q, \eps)$:
+        \[ {}_{p}V_q \to \alpha \; {}_{r}V_s \; \beta. \]
+\end{itemize}
+Pocetna varijabla je ${}_{q_0}V_{q_X}$.
+
+% ================================================================
+\section{Chomskyjeva normalna forma (ChNF)}
+% ================================================================
+
+Svaka BKG može se pretvoriti u kanonski oblik koji je koristan
+za algoritme i dokaze.
+
+\begin{definicija}[Chomskyjeva normalna forma]
+BKG je u \textbf{Chomskyjevoj normalnoj formi} (ChNF) ako su sva
+njena pravila jednog od dva oblika:
+\[
+  A \to BC \qquad \text{(sirenje)}, \qquad A \to \alpha \qquad \text{(citanje)},
+\]
+gdje su $A, B, C \in V$ varijable (s uvjetom $S \notin \{B, C\}$),
+a $\alpha \in \Sig$ znak.
+\end{definicija}
+
+Svaka ChNF gramatika generira pozitivan jezik (jer ni sirenje ni
+citanje ne mogu dati $\eps$). Dokazat cemo i obrat: svaki pozitivni
+BK-jezik ima ChNF gramatiku.
+
+\subsection{Algoritam pretvorbe u ChNF (5 faza)}
+
+Pretvorba ide u pet faza, svaka osigurava jedno svojstvo ne
+kvareci prethodna.
+
+\medskip
+\noindent\textbf{Faza START.}
+Ako se pocetna varijabla $S$ pojavljuje na desnoj strani ijednog
+pravila, uvedemo novu varijablu $S_0$ s pravilom $S_0 \to S$ i
+proglasimo $S_0$ novom pocetnom varijablom.
+
+\medskip
+\noindent\textbf{Faza TERM.}
+Za svaki znak $\alpha \in \Sig$ koji se pojavljuje u nekom pravilu
+uz jos nesto (dakle nije sam), uvedemo novu varijablu $N_\alpha$
+s pravilom $N_\alpha \to \alpha$, i sve takve pojave $\alpha$
+zamijenimo s $N_\alpha$.
+
+\emph{Primjer:} pravilo $A \to aBc$ postaje $A \to N_a B N_c$
+(gdje su $N_a \to a$ i $N_c \to c$ nova pravila citanja).
+
+\medskip
+\noindent\textbf{Faza BIN.}
+Za svako pravilo s $n \geq 3$ simbola na desnoj strani,
+$A \to V_1 V_2 \cdots V_n$, uvedemo nove varijable $A_1, \ldots, A_{n-2}$
+i rastavimo ga na lanac:
+\[
+  A \to V_1 A_1, \quad A_1 \to V_2 A_2, \quad \ldots, \quad A_{n-2} \to V_{n-1} V_n.
+\]
+
+\medskip
+\noindent\textbf{Faza DEL.}
+Eliminiramo pravila oblika $A \to \eps$ (za $A \neq S$).
+Algoritam:
+\begin{enumerate}
+  \item Nademo sve \textbf{nepozitivne varijable} $\mathrm{np} = \{A : A \Rightarrow^* \eps\}$
+        iteracijom: pocnemo s $\mathrm{np} = \emptyset$, i dodajemo $A$
+        kad su sve varijable na desnoj strani nekog pravila za $A$ u $\mathrm{np}$.
+  \item Za svako pravilo koje sadrzi $k > 0$ varijabli iz $\mathrm{np}$,
+        dodamo $2^k$ novih pravila (jedno za svaki podskup tih pojava
+        koje brisemo), i brisemo originalno pravilo $A \to \eps$.
+\end{enumerate}
+Gramatika je bila pozitivna ako i samo ako $S \notin \mathrm{np}$.
+
+\medskip
+\noindent\textbf{Faza UNIT.}
+Eliminiramo pravila oblika $A \to B$ (jedna varijabla na desnoj strani).
+Za svako takvo pravilo: uklonimo ga, zapamtimo, i za svako pravilo
+$B \to u$ dodamo $A \to u$ (osim ako smo to pravilo vec uklonili).
+
+\begin{primjer}[Pretvorba u ChNF]
+Pretvorimo gramatiku $S \to ASA \mid aB$, $A \to B \mid S$, $B \to b \mid \eps$.
+
+\textbf{START}: $S$ se ne pojavljuje na desnoj strani --- preskacemo.
+
+\textbf{TERM}: $a$ i $b$ se pojavljuju uz ostalo: uvedemo $N_a \to a$, $N_b \to b$.
+Dobijemo: $S \to ASA \mid N_a B$, $B \to N_b \mid \eps$.
+
+\textbf{BIN}: $S \to ASA$ ima tri simbola: $S \to A A_1$, $A_1 \to SA$.
+
+\textbf{DEL}: $B \to \eps$, pa $\mathrm{np} = \{B\}$.
+Pravilo $S \to N_a B$ daje i $S \to N_a$.
+
+\textbf{UNIT}: $A \to B$ i $A \to S$. Za $A \to B$: $B$ ima pravila
+$B \to N_b$, pa dodamo $A \to N_b$. Za $A \to S$: $S$ ima pravila
+$S \to A A_1 \mid N_a B \mid N_a$, pa dodamo ta pravila za $A$.
+\end{primjer}
+
+% ================================================================
+\section{Algoritam CYK}
+% ================================================================
+
+ChNF nam omogucuje efikasan algoritam parsiranja.
+
+\begin{propozicija}
+Problem prihvaćanja $A_\mathrm{BK}$ je odlučiv. Konkretno,
+algoritam CYK rješava ga u $O(n^3 \cdot |G|)$ vremenu,
+gdje je $n = |w|$ duljina ulazne riječi.
+\end{propozicija}
+
+\subsection{Ideja: dinamičko programiranje}
+
+Ključna opservacija za ChNF: ako $A \Rightarrow^* w_{i:j}$
+(podriječ od pozicije $i$ do $j$), tada prvi korak mora biti širenje
+$A \to BC$, a $B$ i $C$ izvode neprazne podrijeci. Dakle postoji
+$k \in (i, j)$ takav da $B \Rightarrow^* w_{i:k}$ i $C \Rightarrow^* w_{k:j}$.
+
+$Ovo sugerira \textbf{dinamičko programiranje}: rješavamo podprobleme
+$A \mathop{?} w_{i:j}$ redom od kracih prema duljima.
+
+\subsection{Tablica i algoritam}
+
+Tablicu $T$ dimenzija $|V| \times n \times n$ popunjavamo:
+
+\medskip
+\noindent\textbf{Baza} ($j = i + 1$, jednoznakovna podriječ):
+\[
+  T[A][i][i+1] = \mathrm{True} \iff (A \to w_i) \in G.
+\]
+
+\noindent\textbf{Korak} ($j - i = \ell > 1$):
+\[
+  T[A][i][j] = \mathrm{True} \iff \exists\, (A \to BC) \in G,\; k \in (i,j) :
+  T[B][i][k] \wedge T[C][k][j].
+\]
+
+\noindent\textbf{Odgovor}: $w \in L(G) \iff T[S][0][n] = \mathrm{True}$.
+
+\begin{primjer}[CYK na djelu]
+Neka je gramatika (u ChNF): $S \to AB \mid BC$, $A \to BA \mid a$,
+ $B \to CC \mid b$, $C \to AB \mid a$ i riječ $w = baaba$.
+
+Duljina je $5$, tablica je $5 \times 5$. Popunjavamo redak po redak
+(duljine $1$, $2$, $3$, $4$, $5$):
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{c|ccccc}
+  & $b$ & $a$ & $a$ & $b$ & $a$ \\
+  & $w_{0:1}$ & $w_{1:2}$ & $w_{2:3}$ & $w_{3:4}$ & $w_{4:5}$ \\\hline
+  $S$ & & $\{S\}$ ok? & \ldots & \ldots & \\
+  $A$ & & $A$ & $A,C$ & & $A,C$ \\
+  $B$ & $B$ & & & $B$ & \\
+  $C$ & & $A,C$ & $A,C$ & & $A,C$ \\
+\end{tabular}
+\end{center}
+
+(Za punu tablicu pogledajte Sipser poglavlje 2.3 ili
+\url{https://youtu.be/EloKZv84hUc?t=246}.)
+
+Na kraju provjerimo $T[S][0][5]$ --- ako je True, riječ je u jeziku.
+\end{primjer}
+
+\subsection{Rekonstrukcija stabla parsiranja}
+
+Osim bool vrijednosti, u tablicu možemo zapisati i ``svjedoke'':
+trojke $(B, C, k)$ koje su dovele do True. Tada možemo rekonstruirati
+cijelo stablo parsiranja rekurzivnim obilaskom tablice.
+
+\begin{kljucno}
+CYK je kubne \emph{vremenske} i kvadratne \emph{prostorne} složenosti
+za jednoznačne gramatike. Nedostatak: radi na ChNF, ne na originalnoj
+gramatici, pa stablo parsiranja sadrži ``artifakte'' pretvorbe u ChNF.
+\end{kljucno}
+
+% ================================================================
+\section{Stabla parsiranja i viseznacanost}
+% ================================================================
+
+\begin{definicija}[Stablo parsiranja]
+\textbf{Stablo parsiranja} iz BKG $G$ za riječ $w$ je stablo u cijem
+korijenu je pocetna varijabla, svaki unutarnji cvor je varijabla
+cija djeca odgovaraju desnoj strani nekog pravila, a listovi cine
+riječ $w$ (čitani slijeva nadesno).
+\end{definicija}
+
+Vrijedi: $w \in L(G)$ ako i samo ako postoji stablo parsiranja za $w$.
+
+\begin{definicija}[Viseznacanost]
+Riječ $w$ je \textbf{$G$-visezna\-cna} ako postoji više različitih
+stabala parsiranja za $w$ u $G$. Gramatika je \textbf{visezna\-cna}
+ako postoji visezna\-cna riječ. Jezik je \textbf{visezna\-can} ako
+je svaka njegova BKG visezna\-cna.
+\end{definicija}
+
+\begin{primjer}
+Gramatika $S \to SS \mid a$ je visezna\-cna: riječ $aaa$ ima dva
+razlicita stabla parsiranja ($(aa)a$ i $a(aa)$).
+
+Pazi: vise izvoda ne znaci nuzno visezna\-cnost! Bitna su stabla
+parsiranja, ne izvodi. Lijevi izvod je jedinstven po stablu parsiranja
+--- postoji bijekcija lijevi izvodi $\leftrightarrow$ stabla parsiranja.
+\end{primjer}
+
+% ================================================================
+\section*{Sazetak}
+% ================================================================
+
+\medskip\noindent
+\begin{tabular}{ll}
+  BKG & bezkontekstna gramatika: $A \to w$ \\
+  PA & potisni automat s stogom \\
+  JPA & jednostavni PA (jedan ulaz, push/pop odvojeni) \\
+  ChNF & $A \to BC$ ili $A \to \alpha$; korisna za algoritme \\
+  CYK & $O(n^3)$ algoritam parsiranja pomoću dinamičkog programiranja \\
+  Viseznacanost & više stabala parsiranja za istu riječ \\
+\end{tabular}
+
+\medskip\noindent
+U sljedećem poglavlju dokazujemo da neke jezike nije moguće opisati BKG-om
+--- pomoću \textbf{leme o pumpanju za BK}.
+
